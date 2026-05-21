@@ -3,7 +3,13 @@ export default async function handler(req, res) {
     return res.status(405).json({ success: false, message: 'Method not allowed' });
   }
 
-  const { email, phone, city, source } = req.body || {};
+  let parsedBody = {};
+  try {
+    parsedBody = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+  } catch {
+    return res.status(400).json({ success: false, message: 'Invalid request format' });
+  }
+  const { email, phone, city, source } = parsedBody;
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return res.status(400).json({ success: false, message: 'Invalid email' });
@@ -41,7 +47,6 @@ export default async function handler(req, res) {
         }
       );
 
-      // Contact doesn't exist yet — fall back to POST create
       if (brevoRes.status === 404) {
         brevoRes = await fetch('https://api.brevo.com/v3/contacts', {
           method: 'POST',
@@ -67,7 +72,7 @@ export default async function handler(req, res) {
       });
     }
 
-    clearTimeout(timeoutId); 
+    clearTimeout(timeoutId);
   } catch (err) {
     console.error('[subscribe] network error calling Brevo:', err.message);
     return res.status(500).json({ success: false, message: 'Something went wrong, please try again.' });
@@ -77,13 +82,17 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true });
   }
 
-  let body;
-  try { body = await brevoRes.json(); } catch { body = {}; }
+  let brevoErrorBody;
+  try { brevoErrorBody = await brevoRes.json(); } catch { brevoErrorBody = {}; }
 
-  if (body.code === 'duplicate_parameter') {
+  if (brevoErrorBody.code === 'duplicate_parameter') {
+    const msg = (brevoErrorBody.message || '').toLowerCase();
+    if (msg.includes('sms') || msg.includes('phone')) {
+      return res.status(400).json({ success: false, message: 'This phone is already on the list under another email.' });
+    }
     return res.status(200).json({ success: true });
   }
 
-  console.error('[subscribe] Brevo error:', brevoRes.status, body);
+  console.error('[subscribe] Brevo error:', brevoRes.status, brevoErrorBody);
   return res.status(500).json({ success: false, message: 'Something went wrong, please try again.' });
 }

@@ -49,6 +49,9 @@ function renderGameday(scope) {
   const single = posters.length === 1;
   const eyebrow = scope === "home" ? "Tonight · across CLVCH" : `Tonight · CLVCH ${scope[0].toUpperCase() + scope.slice(1)}`;
 
+  let notifySeen = false;
+  try { notifySeen = localStorage.getItem('clvch_notify_seen') === 'true'; } catch {}
+
   return `
 <section class="gdposter ${single ? 'gdposter--single' : ''}" data-gd-scope="${scope}" aria-label="Tonight's gameday poster">
   <div class="gdposter-inner">
@@ -109,11 +112,16 @@ function renderGameday(scope) {
         <span>Click through for tonight's offers, table drops, and member codes.</span>
       </div>
       <div class="gdposter-notify">
-        <p class="gdposter-notify-label">Get notified when the lineup drops →</p>
-        <form class="gdposter-notify-form" id="gdNotifyForm">
-          <input type="email" placeholder="your@email.com" required autocomplete="email" />
-          <button type="submit">Notify me</button>
-        </form>
+        <p class="gdposter-notify-label">Not on the list yet?</p>
+        <p style="font-family:var(--editorial);font-size:14px;color:var(--bone-dim);line-height:1.5;margin-bottom:12px;">Get first access to openings, residencies, and gameday tables.</p>
+        ${notifySeen
+          ? `<p class="gdposter-notify-done">You're on the list. We'll be in touch.</p>`
+          : `<form class="gdposter-notify-form" id="notifyForm">
+          <input type="email" id="notifyEmail" placeholder="your@email.com" autocomplete="email" />
+          <input type="tel" id="notifyPhone" placeholder="Mobile (optional)" />
+          <p style="font-family:var(--mono);font-size:10px;letter-spacing:0.12em;color:var(--bone-muted);margin-top:4px;margin-bottom:0;">Optional — for first-call texts on sold-out nights</p>
+          <button type="submit" id="notifyBtn">Join</button>
+        </form>`}
       </div>
     </aside>
   </div>
@@ -809,20 +817,6 @@ ${renderFooter()}
 
 /* ─────── THANK YOU ─────── */
 function renderThankYou() {
-  let storedEmail = '';
-  try { storedEmail = localStorage.getItem('clvch_email') || ''; } catch {}
-
-  const phoneSection = storedEmail ? `
-<div id="tyPhoneSection" style="border-top:1px solid var(--line-soft);margin-top:64px;padding-top:48px;max-width:480px;">
-  <div class="eyebrow" style="margin-bottom:16px;color:var(--bone-muted);">INSIDE TRACK.</div>
-  <p style="font-family:var(--editorial);font-size:17px;color:var(--bone-dim);line-height:1.5;font-weight:300;margin-bottom:24px;">Want first-call texts for sold-out nights and gameday tables?</p>
-  <form id="tyPhoneForm" style="display:flex;flex-direction:column;gap:12px;">
-    <input type="tel" id="tyPhoneInput" name="phone" placeholder="Mobile number" style="background:transparent;border:1px solid var(--line);color:var(--bone);padding:16px;font-family:var(--mono);font-size:12px;letter-spacing:0.08em;width:100%;box-sizing:border-box;outline:none;min-height:44px;" />
-    <button type="submit" id="tyPhoneBtn" class="cta" style="width:100%;padding:16px;font-size:13px;min-height:44px;">Get VIP Alerts</button>
-  </form>
-  <p style="font-family:var(--mono);font-size:10px;letter-spacing:0.18em;color:var(--bone-muted);text-transform:uppercase;margin-top:12px;text-align:center;">Texts only. Unsubscribe anytime.</p>
-</div>` : '';
-
   return `
 <section class="locpage">
   <div class="locpage-head" style="min-height:60vh;display:flex;align-items:center;">
@@ -834,7 +828,6 @@ function renderThankYou() {
         <a href="#/" data-link class="cta" style="display:inline-block;padding:16px 32px;font-size:13px;">Back to home →</a>
         <a href="https://instagram.com/clvch.usa" class="nav-social--ig" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:10px;padding:16px 24px;border:1px solid var(--line);font-family:var(--mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--bone-muted);transition:color 220ms;">Follow us on Instagram</a>
       </div>
-      ${phoneSection}
     </div>
   </div>
 </section>
@@ -843,22 +836,6 @@ function renderThankYou() {
 
 /* ─────── CONFIRMED ─────── */
 function renderConfirmed() {
-  let storedEmail = '';
-  let phoneCaptured = false;
-  try { storedEmail = localStorage.getItem('clvch_email') || ''; } catch {}
-  try { phoneCaptured = localStorage.getItem('clvch_phone_captured') === 'true'; } catch {}
-
-  const phoneSection = (storedEmail && !phoneCaptured) ? `
-<div id="cfPhoneSection" style="border-top:1px solid var(--line-soft);margin-top:64px;padding-top:48px;max-width:480px;">
-  <div class="eyebrow" style="margin-bottom:16px;color:var(--bone-muted);">INSIDE TRACK.</div>
-  <p style="font-family:var(--editorial);font-size:17px;color:var(--bone-dim);line-height:1.5;font-weight:300;margin-bottom:24px;">Want first-call texts for sold-out nights and gameday tables?</p>
-  <form id="cfPhoneForm" style="display:flex;flex-direction:column;gap:12px;">
-    <input type="tel" id="cfPhoneInput" name="phone" placeholder="Mobile number" style="background:transparent;border:1px solid var(--line);color:var(--bone);padding:16px;font-family:var(--mono);font-size:12px;letter-spacing:0.08em;width:100%;box-sizing:border-box;outline:none;min-height:44px;" />
-    <button type="submit" id="cfPhoneBtn" class="cta" style="width:100%;padding:16px;font-size:13px;min-height:44px;">Get VIP Alerts</button>
-  </form>
-  <p style="font-family:var(--mono);font-size:10px;letter-spacing:0.18em;color:var(--bone-muted);text-transform:uppercase;margin-top:12px;text-align:center;">Texts only. Unsubscribe anytime.</p>
-</div>` : '';
-
   const socialSection = `
 <div style="border-top:1px solid var(--line-soft);margin-top:64px;padding-top:48px;max-width:480px;">
   <div class="eyebrow" style="margin-bottom:16px;color:var(--bone-muted);">FOLLOW THE FLOOR.</div>
@@ -880,7 +857,6 @@ function renderConfirmed() {
         <a href="#/reserve" data-link class="cta" style="display:inline-block;padding:16px 32px;font-size:13px;">Reserve a table →</a>
         <a href="#/" data-link style="display:inline-flex;align-items:center;padding:16px 24px;border:1px solid var(--line);font-family:var(--mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--bone-muted);transition:color 220ms;">Back to home</a>
       </div>
-      ${phoneSection}
       ${socialSection}
     </div>
   </div>
@@ -2141,111 +2117,78 @@ function route() {
     }
   }
 
-  // ─── Gameday notify form ───
-  const gdNotifyForm = outlet.querySelector('#gdNotifyForm');
-  if (gdNotifyForm) {
-    gdNotifyForm.addEventListener('submit', (e) => {
+  // ─── Notify form ───
+  const notifyForm = outlet.querySelector('#notifyForm');
+  if (notifyForm) {
+    notifyForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const email = gdNotifyForm.querySelector('input[type="email"]').value.trim();
-      if (!email) return;
-      try { localStorage.setItem('clvch_email', email); } catch {}
-      const done = document.createElement('p');
-      done.className = 'gdposter-notify-done';
-      done.textContent = "You're on the list — lineup drops in your inbox first.";
-      gdNotifyForm.replaceWith(done);
-    });
-  }
-
-  // ─── Thank-you phone capture ───
-  const tyPhoneForm = outlet.querySelector('#tyPhoneForm');
-  if (tyPhoneForm) {
-    tyPhoneForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const phoneVal = tyPhoneForm.querySelector('#tyPhoneInput')?.value.trim();
-      if (!phoneVal) return;
-      const btn = tyPhoneForm.querySelector('#tyPhoneBtn');
-      if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
-      let email = '';
-      try { email = localStorage.getItem('clvch_email') || ''; } catch {}
-      try {
-        const res = await fetch('/api/subscribe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, phone: phoneVal, source: 'thank-you-phone' }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (res.ok && data.success) {
-          try { localStorage.setItem('clvch_phone_captured', 'true'); } catch {}
-          const section = outlet.querySelector('#tyPhoneSection');
-          if (section) section.innerHTML = `<p style="font-family:var(--editorial);font-style:italic;font-size:24px;color:var(--gold);line-height:1.4;margin-top:64px;border-top:1px solid var(--line-soft);padding-top:48px;">You're on the floor.<br>See you soon.</p>`;
-        } else {
-          if (btn) { btn.disabled = false; btn.textContent = 'Get VIP Alerts'; }
-          let errEl = tyPhoneForm.querySelector('.ty-phone-error');
-          if (!errEl) {
-            errEl = document.createElement('p');
-            errEl.className = 'ty-phone-error';
-            errEl.style.cssText = 'color:#ff8b7e;font-family:var(--mono);font-size:10px;letter-spacing:0.12em;margin-top:8px;';
-            tyPhoneForm.appendChild(errEl);
-          }
-          errEl.textContent = 'Hmm, try again.';
-        }
-      } catch {
-        if (btn) { btn.disabled = false; btn.textContent = 'Get VIP Alerts'; }
-        let errEl = tyPhoneForm.querySelector('.ty-phone-error');
+      const emailVal = notifyForm.querySelector('#notifyEmail')?.value.trim() || '';
+      if (!emailVal || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+        let errEl = notifyForm.querySelector('.notify-error');
         if (!errEl) {
           errEl = document.createElement('p');
-          errEl.className = 'ty-phone-error';
+          errEl.className = 'notify-error';
           errEl.style.cssText = 'color:#ff8b7e;font-family:var(--mono);font-size:10px;letter-spacing:0.12em;margin-top:8px;';
-          tyPhoneForm.appendChild(errEl);
+          notifyForm.appendChild(errEl);
         }
-        errEl.textContent = 'Hmm, try again.';
+        errEl.textContent = 'Enter a valid email.';
+        return;
       }
-    });
-  }
-
-  // ─── Confirmed phone capture ───
-  const cfPhoneForm = outlet.querySelector('#cfPhoneForm');
-  if (cfPhoneForm) {
-    cfPhoneForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const phoneVal = cfPhoneForm.querySelector('#cfPhoneInput')?.value.trim();
-      if (!phoneVal) return;
-      const btn = cfPhoneForm.querySelector('#cfPhoneBtn');
-      if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
-      let email = '';
-      try { email = localStorage.getItem('clvch_email') || ''; } catch {}
+      const rawPhone = notifyForm.querySelector('#notifyPhone')?.value.trim() || '';
+      let phoneVal;
+      if (rawPhone) {
+        const hasPlus = rawPhone.startsWith('+');
+        const digits = rawPhone.replace(/\D/g, '');
+        phoneVal = (hasPlus ? '+' : '+1') + digits;
+        if (!/^\+\d{10,15}$/.test(phoneVal)) {
+          let errEl = notifyForm.querySelector('.notify-error');
+          if (!errEl) {
+            errEl = document.createElement('p');
+            errEl.className = 'notify-error';
+            errEl.style.cssText = 'color:#ff8b7e;font-family:var(--mono);font-size:10px;letter-spacing:0.12em;margin-top:8px;';
+            notifyForm.appendChild(errEl);
+          }
+          errEl.textContent = 'Enter a valid phone number.';
+          return;
+        }
+      }
+      const btn = notifyForm.querySelector('#notifyBtn');
+      if (btn) { btn.disabled = true; btn.textContent = 'Joining...'; }
+      try { localStorage.setItem('clvch_email', emailVal); } catch {}
       try {
         const res = await fetch('/api/subscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, phone: phoneVal, source: 'confirmed-phone' }),
+          body: JSON.stringify({ email: emailVal, phone: phoneVal, city: segs[1], source: 'notify-form' }),
         });
         const data = await res.json().catch(() => ({}));
         if (res.ok && data.success) {
-          try { localStorage.setItem('clvch_phone_captured', 'true'); } catch {}
-          const section = outlet.querySelector('#cfPhoneSection');
-          if (section) section.innerHTML = `<p style="font-family:var(--editorial);font-style:italic;font-size:24px;color:var(--gold);line-height:1.4;margin-top:64px;border-top:1px solid var(--line-soft);padding-top:48px;">You're on the floor.<br>See you soon.</p>`;
+          try { localStorage.setItem('clvch_notify_seen', 'true'); } catch {}
+          const done = document.createElement('p');
+          done.className = 'gdposter-notify-done';
+          done.textContent = "You're on the list. We'll be in touch.";
+          notifyForm.replaceWith(done);
         } else {
-          if (btn) { btn.disabled = false; btn.textContent = 'Get VIP Alerts'; }
-          let errEl = cfPhoneForm.querySelector('.cf-phone-error');
+          if (btn) { btn.disabled = false; btn.textContent = 'Join'; }
+          let errEl = notifyForm.querySelector('.notify-error');
           if (!errEl) {
             errEl = document.createElement('p');
-            errEl.className = 'cf-phone-error';
+            errEl.className = 'notify-error';
             errEl.style.cssText = 'color:#ff8b7e;font-family:var(--mono);font-size:10px;letter-spacing:0.12em;margin-top:8px;';
-            cfPhoneForm.appendChild(errEl);
+            notifyForm.appendChild(errEl);
           }
-          errEl.textContent = 'Hmm, try again.';
+          errEl.textContent = data.message || "Couldn't add you. Try again?";
         }
       } catch {
-        if (btn) { btn.disabled = false; btn.textContent = 'Get VIP Alerts'; }
-        let errEl = cfPhoneForm.querySelector('.cf-phone-error');
+        if (btn) { btn.disabled = false; btn.textContent = 'Join'; }
+        let errEl = notifyForm.querySelector('.notify-error');
         if (!errEl) {
           errEl = document.createElement('p');
-          errEl.className = 'cf-phone-error';
+          errEl.className = 'notify-error';
           errEl.style.cssText = 'color:#ff8b7e;font-family:var(--mono);font-size:10px;letter-spacing:0.12em;margin-top:8px;';
-          cfPhoneForm.appendChild(errEl);
+          notifyForm.appendChild(errEl);
         }
-        errEl.textContent = 'Hmm, try again.';
+        errEl.textContent = "Couldn't add you. Try again?";
       }
     });
   }

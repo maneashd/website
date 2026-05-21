@@ -1864,17 +1864,16 @@ footer {
 }
 .gdposter-notify-form {
   display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .gdposter-notify-form input {
-  flex: 1;
   background: var(--ink);
   border: 1px solid var(--line);
-  border-right: none;
   color: var(--bone);
   padding: 11px 14px;
   font: inherit;
   font-size: 13px;
-  min-width: 0;
 }
 .gdposter-notify-form input::placeholder { color: var(--bone-muted); }
 .gdposter-notify-form input:focus { outline: none; border-color: var(--bone); }
@@ -1982,8 +1981,8 @@ footer {
 
 
 .citygate-form {
-  display: grid;
-  grid-template-columns: 1fr auto;
+  display: flex;
+  flex-direction: column;
   gap: 8px;
   margin-bottom: 20px;
 }
@@ -2003,7 +2002,7 @@ footer {
   background: var(--bone);
   color: var(--ink);
   border: 0;
-  padding: 0 22px;
+  padding: 14px 22px;
   font-family: var(--body);
   font-weight: 600;
   font-size: 13px;

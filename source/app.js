@@ -642,6 +642,24 @@ window.CLVCH.saveMenu = () => {
       form2.addEventListener("submit", async (e) => {
         e.preventDefault();
         const val = input2?.value.trim();
+        const rawPhone = card.querySelector("#cityGatePhone")?.value.trim() || "";
+        let phone2;
+        if (rawPhone) {
+          const hasPlus = rawPhone.startsWith("+");
+          const digits = rawPhone.replace(/\D/g, "");
+          phone2 = (hasPlus ? "+" : "+1") + digits;
+          if (!/^\+\d{10,15}$/.test(phone2)) {
+            let errEl = form2.querySelector(".cg-error");
+            if (!errEl) {
+              errEl = document.createElement("p");
+              errEl.className = "cg-error";
+              errEl.style.cssText = "color:#ff8b7e;font-family:var(--mono);font-size:10px;letter-spacing:0.12em;margin-top:8px;";
+              form2.appendChild(errEl);
+            }
+            errEl.textContent = "Enter a valid phone number.";
+            return;
+          }
+        }
 
         if (!val || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
           let errEl = form2.querySelector(".cg-error");
@@ -665,7 +683,7 @@ window.CLVCH.saveMenu = () => {
           const res = await fetch("/api/subscribe", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: val, city: cityId || "", source: "city-gate-modal" }),
+            body: JSON.stringify({ email: val, phone: phone2, city: cityId || "", source: "city-gate-modal" }),
           });
           const data = await res.json().catch(() => ({}));
 
@@ -681,7 +699,7 @@ window.CLVCH.saveMenu = () => {
               errEl.style.cssText = "color:#ff8b7e;font-family:var(--mono);font-size:10px;letter-spacing:0.12em;margin-top:8px;";
               form2.appendChild(errEl);
             }
-            errEl.textContent = "Couldn't add you. Try again?";
+            errEl.textContent = data.message || "Couldn't add you. Try again?";
           }
         } catch {
           if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = originalBtnText; }
