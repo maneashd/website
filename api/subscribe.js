@@ -75,6 +75,7 @@ export default async function handler(req, res) {
   }
 
   if (brevoRes.ok || brevoRes.status === 201) {
+    console.log('[debug] Brevo success - status:', brevoRes.status, 'method used:', isUpdate ? 'PUT' : 'POST');
     return res.status(200).json({ success: true });
   }
 
@@ -82,6 +83,7 @@ export default async function handler(req, res) {
   try { body = await brevoRes.json(); } catch { body = {}; }
 
   if (body.code === 'duplicate_parameter') {
+    console.log('[debug] silent duplicate suppression hit - source was:', source);
     return res.status(200).json({ success: true });
   }
 
