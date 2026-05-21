@@ -9,31 +9,65 @@ export default async function handler(req, res) {
     return res.status(400).json({ success: false, message: 'Invalid email' });
   }
 
-  const payload = {
-    email,
-    attributes: {
-      SMS:    phone  || '',
-      CITY:   city   || '',
-      SOURCE: source || '',
-    },
-    listIds: [parseInt(process.env.BREVO_LIST_ID, 10)],
-    updateEnabled: true,
+  const isUpdate = source === 'thank-you-phone' || source === 'confirmed-phone';
+
+  if (isUpdate && !phone) {
+    return res.status(400).json({ success: false, message: 'Phone required for update' });
+  }
+
+  const listIds = [parseInt(process.env.BREVO_LIST_ID, 10)];
+  const attributes = {
+    SMS:    phone  || '',
+    CITY:   city   || '',
+    SOURCE: source || '',
   };
 
   let brevoRes;
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
-    brevoRes = await fetch('https://api.brevo.com/v3/contacts', {
-      method: 'POST',
-      headers: {
-        'api-key':      process.env.BREVO_API_KEY,
-        'content-type': 'application/json',
-        'accept':       'application/json',
-      },
-      body: JSON.stringify(payload),
-      signal: controller.signal,
-    });
+
+    if (isUpdate) {
+      brevoRes = await fetch(
+        `https://api.brevo.com/v3/contacts/${encodeURIComponent(email)}`,
+        {
+          method: 'PUT',
+          headers: {
+            'api-key':      process.env.BREVO_API_KEY,
+            'content-type': 'application/json',
+            'accept':       'application/json',
+          },
+          body: JSON.stringify({ attributes, listIds }),
+          signal: controller.signal,
+        }
+      );
+
+      // Contact doesn't exist yet — fall back to POST create
+      if (brevoRes.status === 404) {
+        brevoRes = await fetch('https://api.brevo.com/v3/contacts', {
+          method: 'POST',
+          headers: {
+            'api-key':      process.env.BREVO_API_KEY,
+            'content-type': 'application/json',
+            'accept':       'application/json',
+          },
+          body: JSON.stringify({ email, attributes, listIds, updateEnabled: true }),
+          signal: controller.signal,
+        });
+      }
+    } else {
+      brevoRes = await fetch('https://api.brevo.com/v3/contacts', {
+        method: 'POST',
+        headers: {
+          'api-key':      process.env.BREVO_API_KEY,
+          'content-type': 'application/json',
+          'accept':       'application/json',
+        },
+        body: JSON.stringify({ email, attributes, listIds, updateEnabled: true }),
+        signal: controller.signal,
+      });
+    }
+
     clearTimeout(timeoutId);
   } catch (err) {
     console.error('[subscribe] network error calling Brevo:', err.message);
