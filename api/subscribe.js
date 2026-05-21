@@ -16,11 +16,10 @@ export default async function handler(req, res) {
   }
 
   const listIds = [parseInt(process.env.BREVO_LIST_ID, 10)];
-  const attributes = {
-    SMS:    phone  || '',
-    CITY:   city   || '',
-    SOURCE: source || '',
-  };
+  const attributes = {};
+  if (phone)  attributes.SMS    = phone;
+  if (city)   attributes.CITY   = city;
+  if (source) attributes.SOURCE = source;
 
   let brevoRes;
   try {
