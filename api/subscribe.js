@@ -68,15 +68,13 @@ export default async function handler(req, res) {
       });
     }
 
-    clearTimeout(timeoutId);
-    console.log('[debug] final brevoRes status:', brevoRes.status, 'isUpdate:', isUpdate);  
+    clearTimeout(timeoutId); 
   } catch (err) {
     console.error('[subscribe] network error calling Brevo:', err.message);
     return res.status(500).json({ success: false, message: 'Something went wrong, please try again.' });
   }
 
   if (brevoRes.ok || brevoRes.status === 201) {
-    console.log('[debug] Brevo success - status:', brevoRes.status, 'method used:', isUpdate ? 'PUT' : 'POST');
     return res.status(200).json({ success: true });
   }
 
@@ -84,7 +82,6 @@ export default async function handler(req, res) {
   try { body = await brevoRes.json(); } catch { body = {}; }
 
   if (body.code === 'duplicate_parameter') {
-    console.log('[debug] silent duplicate suppression hit - source was:', source);
     return res.status(200).json({ success: true });
   }
 
