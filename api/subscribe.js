@@ -69,6 +69,7 @@ export default async function handler(req, res) {
     }
 
     clearTimeout(timeoutId);
+    console.log('[debug] final brevoRes status:', brevoRes.status, 'isUpdate:', isUpdate);  
   } catch (err) {
     console.error('[subscribe] network error calling Brevo:', err.message);
     return res.status(500).json({ success: false, message: 'Something went wrong, please try again.' });
