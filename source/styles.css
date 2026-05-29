@@ -3307,10 +3307,10 @@ footer {
 
 .contact-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(340px, 460px));
+  justify-content: center;
   gap: 1px;
   background: var(--line-soft);
-  border: 1px solid var(--line-soft);
   margin-bottom: 80px;
 }
 .contact-card {
@@ -3346,7 +3346,7 @@ footer {
 .contact-card-body .actions a:hover:not(:first-child) { background: rgba(255,255,255,0.04); }
 
 .contact-general {
-  padding: 80px 0;
+  padding: 80px var(--pad);
   border-top: 1px solid var(--line-soft);
 }
 .contact-general-grid {
@@ -3560,86 +3560,62 @@ footer {
   .static-page { padding: 48px var(--pad) 80px; }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   Age gate / Alcohol notice
-   ═══════════════════════════════════════════════════════════════ */
-
-.agegate {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background: var(--ink);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--pad);
-  opacity: 0;
-  transition: opacity 400ms;
-}
-.agegate.open { opacity: 1; }
-.agegate.out { opacity: 0; pointer-events: none; }
-
-.agegate-card {
-  max-width: 520px;
-  width: 100%;
-  text-align: center;
-}
-.agegate-logo {
+/* ─── Reserve: call-to-reserve ─── */
+.reserve-call { max-width: 600px; }
+.reserve-call-number {
+  display: block;
   font-family: var(--display);
-  font-size: clamp(48px, 8vw, 80px);
-  letter-spacing: 0.05em;
+  font-size: clamp(28px, 5vw, 48px);
+  letter-spacing: 0.04em;
   line-height: 1;
-  margin-bottom: 32px;
+  color: var(--bone);
+  text-decoration: none;
+  margin-bottom: 24px;
 }
-.agegate-card h2 {
-  font-family: var(--display);
-  font-size: clamp(40px, 7vw, 72px);
-  line-height: 0.95;
-  letter-spacing: 0.02em;
-  margin-bottom: 20px;
+.reserve-call-number:hover { opacity: 0.75; }
+.reserve-call-details {
+  border-top: 1px solid var(--line-soft);
+  padding-top: 40px;
+  margin-bottom: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
-.agegate-card h2 em { font-family: var(--editorial); font-style: italic; color: var(--gold); font-weight: 300; }
-.agegate-card > p {
-  color: var(--bone-dim);
+.reserve-call-row {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 24px;
+  align-items: start;
   font-size: 15px;
   line-height: 1.7;
-  max-width: 400px;
-  margin: 0 auto 40px;
+  color: var(--bone-dim);
 }
-.agegate-btns {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  margin-bottom: 32px;
-  flex-wrap: wrap;
-}
-.agegate-btns button {
-  padding: 18px 40px;
-  font-family: var(--display);
-  font-size: 20px;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  border: 1px solid var(--bone);
-  transition: background 200ms, color 200ms;
-}
-.agegate-btns button:first-child {
-  background: var(--bone);
-  color: var(--ink);
-}
-.agegate-btns button:first-child:hover { background: rgba(255,255,255,0.85); }
-.agegate-btns button.is-secondary {
-  background: transparent;
-  color: var(--bone-muted);
-  border-color: var(--line);
-}
-.agegate-btns button.is-secondary:hover { color: var(--bone); border-color: var(--bone); }
-.agegate-legal {
+.reserve-call-label {
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--bone-muted);
-  line-height: 1.6;
+  padding-top: 3px;
+}
+.reserve-call-link {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--bone);
+  text-decoration: none;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--line-soft);
+  transition: opacity 200ms;
+}
+.reserve-call-link:hover { opacity: 0.7; }
+.reserve-call-upsell {
+  color: var(--bone-muted);
+  font-size: 14px;
+  line-height: 1.75;
   max-width: 420px;
-  margin: 0 auto;
+  border-top: 1px solid var(--line-soft);
+  padding-top: 32px;
 }

@@ -174,9 +174,9 @@ function renderHome() {
 
     <div class="hero-bottom">
       <p class="hero-blurb">${heroBlurb}</p>
-      <a href="#/reserve" class="hero-stats" data-link style="text-decoration:none;">
+      <div class="hero-stats">
         <div><div class="n">${String(L.length).padStart(2,'0')}</div><div class="l">Location${L.length===1?'':'s'}</div></div>
-      </a>
+      </div>
     </div>
   </div>
 </section>
@@ -276,7 +276,6 @@ function renderHome() {
               </dl>
               <div class="actions">
                 <a href="#/locations/${l.id}" data-link>Step Inside →</a>
-                <a href="#/reserve?city=${l.id}" data-link>Reserve</a>
               </div>
             </div>
           </div>
@@ -293,23 +292,6 @@ function renderHome() {
   </div>
 </div>
 
-
-<!-- RESERVE CTA -->
-<section class="reserve-strip">
-  <div class="reserve-strip-inner">
-    <div>
-      <div class="eyebrow" style="margin-bottom:20px;">${H.reserveStrip.eyebrow}</div>
-      <h2>${H.reserveStrip.headline}</h2>
-      <p class="sub">${H.reserveStrip.sub}</p>
-    </div>
-    <a href="#/reserve" class="bigcta" data-link data-cta="reserve">
-      <div>
-        <div class="t">${H.reserveStrip.ctaTitle}</div>
-        <div class="s">${H.reserveStrip.ctaSub}</div>
-      </div>
-    </a>
-  </div>
-</section>
 
 ${renderFooter()}
   `;
@@ -500,166 +482,53 @@ ${renderFooter()}
 function renderReserve() {
   const L = publicLocations();
   const params = new URLSearchParams(location.hash.split("?")[1] || "");
-  const preselect = params.get("city") || (L[0] && L[0].id) || "atlanta";
-  const preCity = L.find(l => l.id === preselect) || L[0];
-  const preEnabled = Boolean(preCity?.reservations_enabled);
+  const cityId = params.get("city");
+  const city = L.find(l => l.id === cityId) || L[0];
+
+  if (!city) {
+    return `
+<section class="locpage">
+  <div class="locpage-head">
+    <div>
+      <div class="eyebrow" style="margin-bottom:24px;">Reservations</div>
+      <h1>Reserve your<br><em>spot.</em></h1>
+    </div>
+  </div>
+  <p style="color:var(--bone-dim);font-size:16px;line-height:1.7;padding-bottom:120px;">No locations available yet — check back soon.</p>
+</section>
+${renderFooter()}`;
+  }
+
+  const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(city.address)}`;
 
   return `
 <section class="locpage">
   <div class="locpage-head">
     <div>
-      <div class="eyebrow" style="margin-bottom:24px;">The List</div>
-      <h1>Reserve<br>the <em>house.</em></h1>
+      <div class="eyebrow" style="margin-bottom:24px;">CLVCH · ${h(city.city)}</div>
+      <h1>Reserve your<br><em>spot.</em></h1>
+      <p class="sub" style="margin-top:24px;max-width:480px;font-size:16px;line-height:1.7;color:var(--bone-dim);">Call us to book your table, private event, or full buyout.</p>
     </div>
-  </div>
-
-  <!-- Booking type selector -->
-  <div style="padding:0 0 40px;">
-    <div class="eyebrow" style="margin-bottom:20px;">Step 01 · Booking type</div>
-    <div class="res-type-btns" id="resTypeBtns">
-      <button class="res-type-btn on" data-type-btn="table">Table reservation</button>
-      <button class="res-type-btn" data-type-btn="private">Private event</button>
-      <button class="res-type-btn" data-type-btn="buyout">Full buyout</button>
-    </div>
-    <input type="hidden" id="resTypeVal" value="table">
   </div>
 
   <div class="locpage-body">
-    <div class="res-cols">
-
-      <!-- LEFT: City -->
-      <div>
-        <div class="eyebrow" style="margin-bottom:20px;">Step 02 · City</div>
-        <div style="display:flex;flex-direction:column;gap:0;">
-          ${L.map(l => `
-            <label style="display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;padding:20px 0;border-bottom:1px solid var(--line-soft);cursor:pointer;">
-              <input type="radio" name="city" value="${l.id}" data-res-enabled="${l.reservations_enabled ? '1' : '0'}" ${l.id===preselect?'checked':''} style="accent-color:oklch(0.78 0.13 75);width:18px;height:18px;">
-              <span style="font-family:var(--display);font-size:32px;letter-spacing:0.02em;">${l.city}</span>
-              <span class="mono" style="font-size:10px;letter-spacing:0.2em;color:var(--bone-muted);text-transform:uppercase;">${l.status === 'open' ? 'Open' : l.status === 'soon' ? 'Waitlist' : 'Opens 4 PM'}</span>
-            </label>
-          `).join("")}
-        </div>
+    <div class="reserve-call">
+      <a href="tel:${h(city.phone)}" class="reserve-call-number">${h(city.phone)}</a>
+      <div class="reserve-call-details">
+        ${city.hours ? `<div class="reserve-call-row">
+          <span class="reserve-call-label">Hours</span>
+          <span>${h(city.hours)}</span>
+        </div>` : ''}
+        ${city.address ? `<div class="reserve-call-row">
+          <span class="reserve-call-label">Address</span>
+          <div>
+            <span>${h(city.address)}</span>
+            <a href="${mapsUrl}" target="_blank" rel="noopener" class="reserve-call-link">Get directions →</a>
+          </div>
+        </div>` : ''}
       </div>
 
-      <!-- RIGHT: dynamic panel -->
-      <div id="reserveRight">
-
-        <!-- FORM shown when reservations_enabled = true -->
-        <div id="reserveForm" ${preEnabled ? '' : 'hidden'}>
-          <div class="eyebrow" style="margin-bottom:20px;">Step 03 · Guest Info</div>
-          <div class="res-input-grid">
-            <div>
-              <label class="mono" style="font-size:10px;letter-spacing:0.22em;color:var(--bone-muted);text-transform:uppercase;">First name</label>
-              <input type="text" name="res_first" autocomplete="given-name" style="width:100%;margin-top:8px;background:var(--ink-2);border:1px solid var(--line);color:var(--bone);padding:14px;font:inherit;">
-            </div>
-            <div>
-              <label class="mono" style="font-size:10px;letter-spacing:0.22em;color:var(--bone-muted);text-transform:uppercase;">Last name</label>
-              <input type="text" name="res_last" autocomplete="family-name" style="width:100%;margin-top:8px;background:var(--ink-2);border:1px solid var(--line);color:var(--bone);padding:14px;font:inherit;">
-            </div>
-            <div>
-              <label class="mono" style="font-size:10px;letter-spacing:0.22em;color:var(--bone-muted);text-transform:uppercase;">Phone</label>
-              <input type="tel" name="res_phone" autocomplete="tel" placeholder="+1 (404) 555-0000" style="width:100%;margin-top:8px;background:var(--ink-2);border:1px solid var(--line);color:var(--bone);padding:14px;font:inherit;">
-            </div>
-            <div>
-              <label class="mono" style="font-size:10px;letter-spacing:0.22em;color:var(--bone-muted);text-transform:uppercase;">Email</label>
-              <input type="email" name="res_email" autocomplete="email" placeholder="you@email.com" style="width:100%;margin-top:8px;background:var(--ink-2);border:1px solid var(--line);color:var(--bone);padding:14px;font:inherit;">
-            </div>
-          </div>
-          <div style="margin-bottom:32px;">
-            <label class="mono" style="font-size:10px;letter-spacing:0.22em;color:var(--bone-muted);text-transform:uppercase;display:block;">Occasion / notes <span style="opacity:0.5;">(optional)</span></label>
-            <textarea name="res_notes" placeholder="Big game? Birthday? Tell us." rows="2" style="width:100%;margin-top:8px;background:var(--ink-2);border:1px solid var(--line);color:var(--bone);padding:14px;font:inherit;resize:vertical;"></textarea>
-          </div>
-
-          <!-- Private event / buyout extra fields -->
-          <div id="reservePrivateFields" style="display:none;margin-bottom:32px;">
-            <div class="eyebrow" style="margin-bottom:20px;">Event details</div>
-            <div class="res-input-grid" style="margin-bottom:16px;">
-              <div>
-                <label class="mono" style="font-size:10px;letter-spacing:0.22em;color:var(--bone-muted);text-transform:uppercase;display:block;">Company / Event name</label>
-                <input type="text" name="res_event_name" placeholder="ACME Corp. Holiday Party" style="width:100%;margin-top:8px;background:var(--ink-2);border:1px solid var(--line);color:var(--bone);padding:14px;font:inherit;">
-              </div>
-              <div>
-                <label class="mono" style="font-size:10px;letter-spacing:0.22em;color:var(--bone-muted);text-transform:uppercase;display:block;">Event type</label>
-                <select name="res_event_type" style="width:100%;margin-top:8px;background:var(--ink-2);border:1px solid var(--line);color:var(--bone);padding:14px;font:inherit;">
-                  <option value="">Select type…</option>
-                  <option>Corporate / Work function</option>
-                  <option>Birthday celebration</option>
-                  <option>Wedding / Engagement</option>
-                  <option>Holiday party</option>
-                  <option>Sports watch party</option>
-                  <option>Other</option>
-                </select>
-              </div>
-            </div>
-            <div class="res-input-grid" style="margin-bottom:16px;">
-              <div>
-                <label class="mono" style="font-size:10px;letter-spacing:0.22em;color:var(--bone-muted);text-transform:uppercase;display:block;">Estimated guests</label>
-                <input type="number" name="res_event_guests" min="10" placeholder="e.g. 75" style="width:100%;margin-top:8px;background:var(--ink-2);border:1px solid var(--line);color:var(--bone);padding:14px;font:inherit;">
-              </div>
-              <div>
-                <label class="mono" style="font-size:10px;letter-spacing:0.22em;color:var(--bone-muted);text-transform:uppercase;display:block;">Estimated budget</label>
-                <select name="res_budget" style="width:100%;margin-top:8px;background:var(--ink-2);border:1px solid var(--line);color:var(--bone);padding:14px;font:inherit;">
-                  <option value="">Select range…</option>
-                  <option>Under $5,000</option>
-                  <option>$5,000 – $10,000</option>
-                  <option>$10,000 – $25,000</option>
-                  <option>$25,000 – $50,000</option>
-                  <option>$50,000+</option>
-                </select>
-              </div>
-            </div>
-            <div style="margin-bottom:0;">
-              <label class="mono" style="font-size:10px;letter-spacing:0.22em;color:var(--bone-muted);text-transform:uppercase;display:block;">Preferred room / space</label>
-              <select name="res_room" style="width:100%;margin-top:8px;background:var(--ink-2);border:1px solid var(--line);color:var(--bone);padding:14px;font:inherit;">
-                <option value="">No preference</option>
-                <option>Main floor</option>
-                <option>Gold Room (VIP)</option>
-                <option>Mezzanine</option>
-                <option>Full venue buyout</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="eyebrow" style="margin-bottom:20px;">Step 04 · Night</div>
-          <div class="res-input-grid">
-            <div>
-              <label class="mono" style="font-size:10px;letter-spacing:0.22em;color:var(--bone-muted);text-transform:uppercase;">Date</label>
-              <input type="date" name="res_date" style="width:100%;margin-top:8px;background:var(--ink-2);border:1px solid var(--line);color:var(--bone);padding:14px;font:inherit;">
-            </div>
-            <div>
-              <label class="mono" style="font-size:10px;letter-spacing:0.22em;color:var(--bone-muted);text-transform:uppercase;">Time</label>
-              <input type="time" name="res_time" value="21:00" style="width:100%;margin-top:8px;background:var(--ink-2);border:1px solid var(--line);color:var(--bone);padding:14px;font:inherit;">
-            </div>
-          </div>
-
-          <div id="reserveGuestsSection">
-          <div class="eyebrow" style="margin-bottom:20px;">Step 05 · Guests</div>
-          <div class="res-guest-btns">
-            ${[2,3,4,5,6,7,8,"8+"].map(n => `<button type="button" data-guest-btn="${n}" style="flex:1;min-width:60px;padding:16px 0;border:1px solid var(--line);background:transparent;color:var(--bone);font-family:var(--display);font-size:20px;cursor:pointer;transition:background 200ms,color 200ms;">${n}</button>`).join("")}
-          </div>
-          <input type="hidden" name="res_guests" value="">
-          </div>
-
-          <button type="button" class="cta" data-reserve-submit id="reserveSubmitBtn" style="width:100%;padding:20px;font-size:13px;">Hold my table →</button>
-        </div>
-
-        <!-- OFF message shown when reservations_enabled = false -->
-        <div id="reserveOff" style="${preEnabled ? 'display:none' : 'display:flex'};flex-direction:column;justify-content:center;min-height:360px;gap:20px;">
-          <div style="font-family:var(--display);font-size:clamp(36px,5vw,52px);letter-spacing:0.02em;line-height:1.05;">Walk right<br>in.</div>
-          <p style="color:var(--bone-dim);max-width:360px;line-height:1.75;">We're not accepting reservation requests at this location right now — it's first come, first served. Show up and the house is yours.</p>
-          <p id="reserveOffPhone" class="mono" style="font-size:10px;letter-spacing:0.22em;color:var(--bone-muted);text-transform:uppercase;" ${(!preEnabled && preCity?.phone) ? '' : 'hidden'}>Questions? Call <a href="tel:${preCity?.phone||''}" style="color:var(--bone);">${preCity?.phone||''}</a></p>
-        </div>
-
-        <!-- SUCCESS state shown after submit -->
-        <div id="reserveSuccess" style="display:none;flex-direction:column;justify-content:center;min-height:360px;gap:20px;">
-          <div class="mono" style="font-size:10px;letter-spacing:0.22em;color:var(--bone-muted);text-transform:uppercase;">You're on the list.</div>
-          <div style="font-family:var(--display);font-size:clamp(36px,5vw,52px);letter-spacing:0.02em;line-height:1.05;">We'll be<br>in touch.</div>
-          <p style="color:var(--bone-dim);max-width:360px;line-height:1.75;">Our manager will call <strong data-success-name style="color:var(--bone);"></strong> at <strong data-success-phone style="color:var(--bone);"></strong> within the hour to confirm your table.</p>
-          <p style="color:var(--bone-dim);max-width:360px;line-height:1.75;">A confirmation is on its way to <strong data-success-email style="color:var(--bone);"></strong>.</p>
-          <p class="mono" style="font-size:10px;letter-spacing:0.22em;color:var(--bone-muted);text-transform:uppercase;">Reach us directly: <span data-success-venue-phone style="color:var(--bone);"></span></p>
-        </div>
-
-      </div>
+      <p class="reserve-call-upsell">Planning a private event or full buyout? Call us and we'll build your night.</p>
     </div>
   </div>
 </section>
@@ -700,7 +569,6 @@ function renderContact() {
           </dl>
           <div class="actions" style="margin-top:28px;">
             <a href="#/locations/${l.id}" data-link>Step Inside →</a>
-            <a href="#/reserve?city=${l.id}" data-link>Reserve</a>
           </div>
         </div>
       </div>
@@ -726,7 +594,7 @@ function renderContact() {
           <li><a href="https://facebook.com/${fb}" target="_blank" rel="noopener">facebook.com/${fb}</a> <span>— Facebook</span></li>
         </ul>
         <h4 style="margin-top:32px;">Private events</h4>
-        <p style="color:var(--bone-dim);font-size:14px;line-height:1.7;">For buyouts, corporate events, and large parties, write to <a href="mailto:${ce}" style="color:var(--bone);">${ce}</a> or use the <a href="#/reserve" data-link style="color:var(--bone);">reservation form</a>.</p>
+        <p style="color:var(--bone-dim);font-size:14px;line-height:1.7;">For buyouts, corporate events, and large parties, write to <a href="mailto:${ce}" style="color:var(--bone);">${ce}</a> or reach us directly.</p>
       </div>
     </div>
   </div>
@@ -808,7 +676,6 @@ function renderMenu() {
 
   <div class="menu-note">
     <p class="mono" style="font-size:10px;letter-spacing:0.22em;color:var(--bone-muted);text-transform:uppercase;">Menu items and prices subject to change · Please inform your server of any allergies · Consuming raw or undercooked foods may increase your risk of foodborne illness</p>
-    <a href="#/reserve" data-link class="cta" style="display:inline-block;padding:16px 32px;margin-top:32px;font-size:13px;">Reserve a table →</a>
   </div>
 </section>
 ${renderFooter()}
@@ -2210,35 +2077,6 @@ function route() {
     start();
   });
 
-  // ─── Reserve page: booking type selector ───
-  const resTypeBtns = outlet.querySelector("#resTypeBtns");
-  if (resTypeBtns) {
-    const privateFields = outlet.querySelector("#reservePrivateFields");
-    const submitBtn = outlet.querySelector("#reserveSubmitBtn");
-    const typeVal = outlet.querySelector("#resTypeVal");
-    const guestsSection = outlet.querySelector("#reserveGuestsSection");
-
-    resTypeBtns.addEventListener("click", (e) => {
-      const btn = e.target.closest("[data-type-btn]"); if (!btn) return;
-      // If success panel is showing, reset back to form state first
-      const sp = outlet.querySelector('#reserveSuccess');
-      const fp = outlet.querySelector('#reserveForm');
-      if (sp && sp.style.display === 'flex') {
-        sp.style.display = 'none';
-        if (fp) fp.style.display = '';
-      }
-      resTypeBtns.querySelectorAll("[data-type-btn]").forEach(b => b.classList.toggle("on", b === btn));
-      const type = btn.dataset.typeBtn;
-      if (typeVal) typeVal.value = type;
-      const isEvent = type === "private" || type === "buyout";
-      if (privateFields) privateFields.style.display = isEvent ? "block" : "none";
-      if (submitBtn) {
-        submitBtn.textContent = type === "private" ? "Submit private event enquiry →" : type === "buyout" ? "Submit buyout enquiry →" : "Hold my table →";
-      }
-      if (guestsSection) guestsSection.style.display = isEvent ? "none" : "";
-    });
-  }
-
   // ─── Admin wiring ───
   const adminSection = outlet.querySelector(".admin");
   if (adminSection) {
@@ -2706,100 +2544,6 @@ function route() {
         filters.querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b));
         activeFilter = b.dataset.filter;
         applyFilter();
-      });
-    }
-  }
-
-  // reserve page: city swap + guest count + submit
-  const reserveRight = outlet.querySelector('#reserveRight');
-  if (reserveRight) {
-    const formPanel    = outlet.querySelector('#reserveForm');
-    const offPanel     = outlet.querySelector('#reserveOff');
-    const offPhone     = outlet.querySelector('#reserveOffPhone');
-    const successPanel = outlet.querySelector('#reserveSuccess');
-
-    const showCity = (cityId, enabled) => {
-      const city = window.CLVCH.locations.find(l => l.id === cityId);
-      if (formPanel) formPanel.style.display = enabled ? '' : 'none';
-      if (offPanel) {
-        offPanel.style.display = enabled ? 'none' : 'flex';
-        if (!enabled && offPhone) {
-          if (city?.phone) {
-            offPhone.innerHTML = `Questions? Call <a href="tel:${city.phone}" style="color:var(--bone);">${city.phone}</a>`;
-            offPhone.style.display = '';
-          } else {
-            offPhone.style.display = 'none';
-          }
-        }
-      }
-      if (successPanel) successPanel.style.display = 'none';
-    };
-
-    outlet.querySelectorAll('[name="city"]').forEach(radio => {
-      radio.addEventListener('change', () => showCity(radio.value, radio.dataset.resEnabled === '1'));
-    });
-
-    const guestsInput = outlet.querySelector('[name="res_guests"]');
-    outlet.querySelectorAll('[data-guest-btn]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        outlet.querySelectorAll('[data-guest-btn]').forEach(b => {
-          b.style.background = 'transparent';
-          b.style.color = 'var(--bone)';
-        });
-        btn.style.background = 'var(--bone)';
-        btn.style.color = 'var(--ink)';
-        if (guestsInput) guestsInput.value = btn.dataset.guestBtn;
-      });
-    });
-
-    const submitBtn = outlet.querySelector('[data-reserve-submit]');
-    if (submitBtn) {
-      submitBtn.addEventListener('click', () => {
-        const first  = outlet.querySelector('[name="res_first"]')?.value.trim() || '';
-        const last   = outlet.querySelector('[name="res_last"]')?.value.trim() || '';
-        const phone  = outlet.querySelector('[name="res_phone"]')?.value.trim() || '';
-        const email  = outlet.querySelector('[name="res_email"]')?.value.trim() || '';
-        const date   = outlet.querySelector('[name="res_date"]')?.value || '';
-        const guests = outlet.querySelector('[name="res_guests"]')?.value || '';
-        const typeVal = outlet.querySelector('#resTypeVal')?.value || 'table';
-        const isEvent = typeVal === 'private' || typeVal === 'buyout';
-
-        const missing = [];
-        const digits = phone.replace(/\D/g, '');
-        if (!first)                                          missing.push('First name');
-        if (!last)                                           missing.push('Last name');
-        if (!phone || digits.length < 10 || digits.length > 11) missing.push('Valid phone (10–11 digits)');
-        if (!email || !/\S+@\S+\.\S+/.test(email))          missing.push('Valid email');
-        if (!date)                              missing.push('Date');
-        if (!isEvent && !guests)               missing.push('Guest count');
-
-        const errEl = outlet.querySelector('#reserveErr');
-        if (errEl) errEl.remove();
-
-        if (missing.length) {
-          const div = document.createElement('p');
-          div.id = 'reserveErr';
-          div.style.cssText = 'color:#ff6b6b;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:16px;padding:14px;border:1px solid rgba(255,107,107,0.35);background:rgba(255,107,107,0.06);';
-          div.textContent = 'Required: ' + missing.join(', ');
-          submitBtn.insertAdjacentElement('beforebegin', div);
-          return;
-        }
-
-        const cityRadio = outlet.querySelector('[name="city"]:checked');
-        const city = cityRadio ? window.CLVCH.locations.find(l => l.id === cityRadio.value) : null;
-        if (formPanel) formPanel.style.display = 'none';
-        if (offPanel)  offPanel.style.display  = 'none';
-        if (successPanel) {
-          successPanel.style.display = 'flex';
-          const nameEl       = successPanel.querySelector('[data-success-name]');
-          const phoneEl      = successPanel.querySelector('[data-success-phone]');
-          const emailEl      = successPanel.querySelector('[data-success-email]');
-          const venuePhoneEl = successPanel.querySelector('[data-success-venue-phone]');
-          if (nameEl)       nameEl.textContent       = first;
-          if (phoneEl)      phoneEl.textContent      = phone;
-          if (emailEl)      emailEl.textContent      = email;
-          if (venuePhoneEl) venuePhoneEl.textContent = city?.phone || '';
-        }
       });
     }
   }

@@ -783,33 +783,6 @@ window.CLVCH.saveMenu = () => {
   window.addEventListener("clvch:home-changed", update);
 })();
 
-/* ═══ Age gate / Alcohol notice ═══ */
-(function ageGate() {
-  const gate = document.getElementById("ageGate");
-  if (!gate) return;
-  const KEY = "clvch_age_ok";
-  const ok = (() => { try { return sessionStorage.getItem(KEY) === "1"; } catch { return false; } })();
-  if (ok) { gate.style.display = "none"; return; }
-
-  gate.style.display = "flex";
-  requestAnimationFrame(() => gate.classList.add("open"));
-
-  document.getElementById("ageYes")?.addEventListener("click", () => {
-    try { sessionStorage.setItem(KEY, "1"); } catch {}
-    gate.classList.add("out");
-    setTimeout(() => { gate.style.display = "none"; gate.classList.remove("open","out"); }, 420);
-  });
-
-  document.getElementById("ageNo")?.addEventListener("click", () => {
-    const card = gate.querySelector(".agegate-card");
-    if (card) card.innerHTML = `
-      <div class="agegate-logo">CLVCH</div>
-      <h2>Come back<br>when you're <em>ready.</em></h2>
-      <p style="color:var(--bone-muted);line-height:1.75;margin-top:20px;font-size:15px;">This site contains content about alcoholic beverages. Please visit when you meet the legal drinking age requirement in your jurisdiction.</p>
-    `;
-  });
-})();
-
 /* ═══ Mobile nav hamburger ═══ */
 (function mobileNav() {
   const hamburger = document.getElementById("navHamburger");
