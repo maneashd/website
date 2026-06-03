@@ -6,9 +6,11 @@ export const homePage = defineType({
   type: 'document',
   fields: [
     defineField({
-      name: 'heroVideoUrl',
-      title: 'Hero Video URL',
-      type: 'url',
+      name: 'heroVideo',
+      title: 'Hero Video',
+      type: 'file',
+      description: 'Brand trailer video for the homepage hero section',
+      options: {accept: 'video/*'},
     }),
     defineField({
       name: 'heroTagline',
