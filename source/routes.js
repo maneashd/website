@@ -1935,6 +1935,43 @@ function route() {
   else html = renderHome();
 
   outlet.innerHTML = html;
+
+  // ─── Document title ───
+  {
+    let title = 'CLVCH — Sports Bar, Restaurant & Nightlife · Bites. Beats. Booze.';
+    if (segs.length === 0) {
+      // home — default above
+    } else if (segs[0] === 'locations' && segs[1]) {
+      const loc = window.CLVCH.locations.find(x => x.id === segs[1]);
+      const cityName = loc ? loc.city : segs[1].charAt(0).toUpperCase() + segs[1].slice(1);
+      title = segs[1] === 'atlanta'
+        ? `CLVCH ${cityName} — Sports Bar · Johns Creek, GA`
+        : `CLVCH ${cityName} — Sports Bar`;
+    } else if (segs[0] === 'locations') {
+      title = 'Locations — CLVCH';
+    } else if (segs[0] === 'menu') {
+      title = 'Menu — CLVCH · Smash Burgers, Cocktails, Brunch';
+    } else if (segs[0] === 'stories' && segs[1]) {
+      const article = (window.CLVCH.articles || []).find(a => a.id === segs[1] && a.published);
+      title = article ? `${article.title} — CLVCH Stories` : 'Stories — CLVCH';
+    } else if (segs[0] === 'stories') {
+      title = 'Stories — CLVCH';
+    } else if (segs[0] === 'reserve') {
+      title = 'Reserve — CLVCH';
+    } else if (segs[0] === 'contact') {
+      title = 'Contact — CLVCH · Hours, Location & Enquiries';
+    } else if (segs[0] === 'thank-you') {
+      title = "CLVCH — You're In";
+    } else if (segs[0] === 'confirmed') {
+      title = 'CLVCH — Welcome to The List';
+    } else if (segs[0] === 'privacy') {
+      title = 'Privacy Policy — CLVCH';
+    } else if (segs[0] === 'terms') {
+      title = 'Terms of Service — CLVCH';
+    }
+    document.title = title;
+  }
+
   window.scrollTo(0, 0);
 
   // mark nav active
