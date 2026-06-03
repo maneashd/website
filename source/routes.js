@@ -891,7 +891,7 @@ ${renderFooter()}`;
   <div class="story-content">
     <div class="mono" style="font-size:10px;letter-spacing:0.22em;color:var(--bone-muted);text-transform:uppercase;margin-bottom:16px;">${window.CLVCH.formatDate(article.date)}${tagLine}</div>
     <h1 style="font-family:var(--display);font-size:clamp(32px,5vw,56px);letter-spacing:0.02em;line-height:1.05;margin-bottom:40px;">${h(article.title)}</h1>
-    <div class="story-prose">${window.CLVCH.markdownToHtml(article.body)}</div>
+    <div class="story-prose">${article.body && article.body.trimStart().startsWith('<') ? article.body : window.CLVCH.markdownToHtml(article.body)}</div>
   </div>
 </div>
 ${renderFooter()}
@@ -2775,6 +2775,9 @@ window.addEventListener("clvch:locations-changed", () => {
 window.addEventListener("clvch:home-changed", () => {
   if (location.hash.startsWith("#/admin")) return;
   route();
+});
+window.addEventListener('clvch:sanity-loaded', () => {
+  if (!location.hash.startsWith('#/admin')) route();
 });
 
 // Anchor-style nav links → scroll to a section on home

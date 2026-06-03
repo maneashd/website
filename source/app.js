@@ -30,13 +30,7 @@ const LOCATIONS_SEED = [
   },
 ];
 
-window.CLVCH.locations = (() => {
-  try {
-    const stored = JSON.parse(localStorage.getItem("clvch_locations") || "null");
-    if (Array.isArray(stored) && stored.length) return stored;
-  } catch {}
-  return JSON.parse(JSON.stringify(LOCATIONS_SEED));
-})();
+window.CLVCH.locations = JSON.parse(JSON.stringify(LOCATIONS_SEED));
 
 window.CLVCH._locationsSeed = () => JSON.parse(JSON.stringify(LOCATIONS_SEED));
 
@@ -157,25 +151,7 @@ const HOME_SEED = {
   },
 };
 
-window.CLVCH.home = (() => {
-  try {
-    const stored = JSON.parse(localStorage.getItem("clvch_home") || "null");
-    if (stored && typeof stored === "object") {
-      const storedItems = stored.pillars?.items;
-      const seedItems = HOME_SEED.pillars.items;
-      const mergedItems = storedItems
-        ? storedItems.map((p, i) => ({ ...seedItems[i], ...p, images: Array.isArray(p.images) && p.images.length ? p.images : (seedItems[i]?.images || [p.image || seedItems[i]?.image]) }))
-        : seedItems;
-      return {
-        ...HOME_SEED, ...stored,
-        hero: { ...HOME_SEED.hero, ...(stored.hero || {}) },
-        pillars: { ...HOME_SEED.pillars, ...(stored.pillars || {}), items: mergedItems },
-        reserveStrip: { ...HOME_SEED.reserveStrip, ...(stored.reserveStrip || {}) },
-      };
-    }
-  } catch {}
-  return JSON.parse(JSON.stringify(HOME_SEED));
-})();
+window.CLVCH.home = JSON.parse(JSON.stringify(HOME_SEED));
 window.CLVCH._homeSeed = () => JSON.parse(JSON.stringify(HOME_SEED));
 window.CLVCH.saveHome = () => {
   try { localStorage.setItem("clvch_home", JSON.stringify(window.CLVCH.home)); } catch {}
@@ -202,13 +178,7 @@ const GAMEDAY_SEED = {
   },
 };
 
-window.CLVCH.gameday = (() => {
-  try {
-    const stored = JSON.parse(localStorage.getItem("clvch_gameday") || "null");
-    if (stored && typeof stored === "object") return { ...GAMEDAY_SEED, ...stored };
-  } catch {}
-  return JSON.parse(JSON.stringify(GAMEDAY_SEED));
-})();
+window.CLVCH.gameday = JSON.parse(JSON.stringify(GAMEDAY_SEED));
 
 window.CLVCH.saveGameday = () => {
   try { localStorage.setItem("clvch_gameday", JSON.stringify(window.CLVCH.gameday)); } catch {}
@@ -319,13 +289,7 @@ const ARTICLES_SEED = [
   },
 ];
 
-window.CLVCH.articles = (() => {
-  try {
-    const stored = JSON.parse(localStorage.getItem('clvch_articles') || 'null');
-    if (Array.isArray(stored)) return stored;
-  } catch {}
-  return JSON.parse(JSON.stringify(ARTICLES_SEED));
-})();
+window.CLVCH.articles = JSON.parse(JSON.stringify(ARTICLES_SEED));
 
 window.CLVCH._articlesSeed = () => JSON.parse(JSON.stringify(ARTICLES_SEED));
 
@@ -513,19 +477,141 @@ const MENU_SEED = {
   ],
 };
 
-window.CLVCH.menu = (() => {
-  try {
-    const stored = JSON.parse(localStorage.getItem('clvch_menu') || 'null');
-    if (stored && typeof stored === 'object' && stored.kitchen) {
-      return { ...MENU_SEED, ...stored };
-    }
-  } catch {}
-  return JSON.parse(JSON.stringify(MENU_SEED));
-})();
+window.CLVCH.menu = JSON.parse(JSON.stringify(MENU_SEED));
 
 window.CLVCH.saveMenu = () => {
   try { localStorage.setItem('clvch_menu', JSON.stringify(window.CLVCH.menu)); } catch {}
 };
+
+/* ═══ Sanity CMS — async data load ═══
+   Fetches all content from Sanity CDN on every page load.
+   On success, overwrites in-memory data and fires clvch:sanity-loaded so the
+   router re-renders the current page with live CMS content.
+   If Sanity is unreachable, seed data already in memory is used silently. */
+(async function initFromSanity() {
+  if (typeof window.CLVCH_SANITY === 'undefined') return;
+  try {
+    const [locations, menuItems, stories, homePage, gamedayPosters] = await Promise.all([
+      window.CLVCH_SANITY.fetch('*[_type == "location"] | order(city asc)'),
+      window.CLVCH_SANITY.fetch('*[_type == "menuItem"] | order(sortOrder asc)'),
+      window.CLVCH_SANITY.fetch('*[_type == "story" && published == true] | order(publishedDate desc)'),
+      window.CLVCH_SANITY.fetch('*[_type == "homePage"][0]'),
+      window.CLVCH_SANITY.fetch('*[_type == "gamedayPoster"]{..., location->}'),
+    ]);
+
+    let changed = false;
+
+    // ── Locations ──
+    if (Array.isArray(locations) && locations.length) {
+      window.CLVCH.locations = locations.map(doc => {
+        const seed = LOCATIONS_SEED.find(s => s.id === doc.id) || {};
+        return {
+          id: doc.id,
+          city: doc.city || '',
+          state: doc.state || '',
+          status: doc.status || 'soon',
+          tonight: seed.tonight || '',
+          tonightTime: seed.tonightTime || '',
+          address: doc.address || '',
+          phone: doc.phone || '',
+          hours: doc.hours || '',
+          capacity: doc.capacity || 0,
+          opened: doc.openedYear ? String(doc.openedYear) : (seed.opened || ''),
+          hero: (doc.heroImage && doc.heroImage.asset)
+            ? (window.CLVCH_SANITY.imageUrl(doc.heroImage.asset._ref) || seed.hero || '../assets/img-club-1.jpg')
+            : (seed.hero || '../assets/img-club-1.jpg'),
+          blurb: doc.blurb || seed.blurb || '',
+          marqueeWords: Array.isArray(doc.marqueeWords) && doc.marqueeWords.length
+            ? doc.marqueeWords : (seed.marqueeWords || []),
+          disabled: doc.disabled || false,
+          reservations_enabled: doc.reservations_enabled !== false,
+          roomImages: seed.roomImages || { bites: [], beats: [], booze: [] },
+        };
+      });
+      changed = true;
+    }
+
+    // ── Home page ──
+    if (homePage && typeof homePage === 'object') {
+      const parts    = (homePage.heroTagline  || '').split(' · ');
+      const subModes = (homePage.heroSubtitle || '').split(' · ').filter(Boolean);
+      window.CLVCH.home = {
+        ...HOME_SEED,
+        hero: {
+          ...HOME_SEED.hero,
+          word1:    parts[0] || HOME_SEED.hero.word1,
+          word2:    parts[1] || HOME_SEED.hero.word2,
+          word3:    parts[2] || HOME_SEED.hero.word3,
+          subModes: subModes.length ? subModes : HOME_SEED.hero.subModes,
+          videoSrc: homePage.heroVideoUrl || HOME_SEED.hero.videoSrc,
+        },
+        marqueeWords: Array.isArray(homePage.marqueeWords) && homePage.marqueeWords.length
+          ? homePage.marqueeWords : HOME_SEED.marqueeWords,
+      };
+      changed = true;
+    }
+
+    // ── Menu ──
+    if (Array.isArray(menuItems) && menuItems.length) {
+      const menu = { coffee: [], brunch: [], kitchen: [], bar: [] };
+      for (const item of menuItems) {
+        if (item.available === false) continue;
+        const tab = item.tab || 'kitchen';
+        if (!menu[tab]) continue;
+        const p = item.price;
+        menu[tab].push({
+          name:  item.name || '',
+          desc:  item.description || '',
+          price: p == null ? '' : ('$' + (Number.isInteger(p) ? p : Number(p).toFixed(2))),
+          tag:   Array.isArray(item.tags) && item.tags.length ? item.tags[0] : '',
+        });
+      }
+      window.CLVCH.menu = menu;
+      changed = true;
+    }
+
+    // ── Stories ──
+    if (Array.isArray(stories) && stories.length) {
+      window.CLVCH.articles = stories
+        .filter(doc => doc.slug && doc.slug.current)
+        .map(doc => ({
+          id:      doc.slug.current,
+          title:   doc.title   || '',
+          excerpt: doc.excerpt || '',
+          body:    window.CLVCH_SANITY.portableTextToHtml(doc.body),
+          cityId:  null,
+          cover:   (doc.coverImage && doc.coverImage.asset)
+            ? (window.CLVCH_SANITY.imageUrl(doc.coverImage.asset._ref) || null) : null,
+          date:      doc.publishedDate ? doc.publishedDate.slice(0, 10) : '',
+          published: doc.published !== false,
+          tags:      doc.category ? [doc.category] : [],
+        }));
+      changed = true;
+    }
+
+    // ── Gameday posters ──
+    if (Array.isArray(gamedayPosters) && gamedayPosters.length) {
+      const gd = JSON.parse(JSON.stringify(GAMEDAY_SEED));
+      for (const poster of gamedayPosters) {
+        const cityId = poster.location && poster.location.id;
+        if (!cityId) continue;
+        gd[cityId] = {
+          enabled:   poster.showSchedule  || false,
+          instagram: poster.instagramHandle || (gd[cityId] && gd[cityId].instagram) || '',
+          facebook:  poster.facebookHandle  || (gd[cityId] && gd[cityId].facebook)  || '',
+          caption:   poster.caption         || (gd[cityId] && gd[cityId].caption)   || '',
+          items:     (gd[cityId] && gd[cityId].items) || [],
+        };
+      }
+      window.CLVCH.gameday = gd;
+      changed = true;
+    }
+
+    if (changed) window.dispatchEvent(new Event('clvch:sanity-loaded'));
+  } catch (e) {
+    // Sanity unreachable — seed data remains in memory
+  }
+})();
 
 /* Admin shortcut disabled for public deployment — re-enable for local dev */
 // document.addEventListener("keydown", (e) => {
