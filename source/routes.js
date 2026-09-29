@@ -1940,40 +1940,96 @@ function route() {
   if (segs[0] === "thank-you" || segs[0] === "confirmed") window.CLVCH.cityGate?.cancelSchedule();
   else window.CLVCH.cityGate?.scheduleFor(segs[0] === "locations" && segs[1] ? segs[1] : null);
 
-  // ─── Document title ───
+  // ─── Document title + SEO meta (description, canonical, social, robots) ───
   {
+    const SITE = "https://www.clvchusa.com";
     let title = 'CLVCH — Sports Bar, Restaurant & Nightlife · Bites. Beats. Booze.';
+    let description = "Premium sports bar in Johns Creek, GA. Smash burgers, signature cocktails, live sports on every screen, brunch, and late-night entertainment. Bites. Beats. Booze.";
+    let image = SITE + "/assets/og-image.jpg";
+    let canonicalPath = "/" + segs.join("/");
+    let indexable = true;
+
     if (segs.length === 0) {
-      // home — default above
+      // home — defaults above
     } else if (segs[0] === 'locations' && segs[1]) {
-      const loc = window.CLVCH.locations.find(x => x.id === segs[1]);
+      const loc = window.CLVCH.locations.find(x => x.id === segs[1] && !x.disabled);
       const cityName = loc ? loc.city : segs[1].charAt(0).toUpperCase() + segs[1].slice(1);
       title = segs[1] === 'atlanta'
         ? `CLVCH ${cityName} — Sports Bar · Johns Creek, GA`
         : `CLVCH ${cityName} — Sports Bar`;
+      if (loc) {
+        description = loc.blurb || `CLVCH ${loc.city}${loc.state ? ", " + loc.state : ""} — sports bar, restaurant and nightlife.${loc.address ? " " + loc.address + "." : ""}`;
+        if (loc.hero) image = loc.hero;
+      } else {
+        indexable = false;
+      }
     } else if (segs[0] === 'locations') {
       title = 'Locations — CLVCH';
+      description = "Find a CLVCH near you — sports bar, restaurant and nightlife under one roof. Addresses, hours and what's on tonight.";
     } else if (segs[0] === 'menu') {
       title = 'Menu — CLVCH · Smash Burgers, Cocktails, Brunch';
+      description = "The CLVCH menu — smash burgers, shareable plates, weekend brunch, signature cocktails and craft drinks.";
     } else if (segs[0] === 'stories' && segs[1]) {
       const article = (window.CLVCH.articles || []).find(a => a.id === segs[1] && a.published);
       title = article ? `${article.title} — CLVCH Stories` : 'Stories — CLVCH';
+      if (article) {
+        description = article.excerpt || description;
+        if (article.cover) image = article.cover;
+      } else {
+        indexable = false;
+      }
     } else if (segs[0] === 'stories') {
       title = 'Stories — CLVCH';
+      description = "Stories from CLVCH — game days, nights out, food, drinks and the people behind the house.";
     } else if (segs[0] === 'reserve') {
       title = 'Reserve — CLVCH';
+      description = "Reserve a table at CLVCH for game days, brunch, dinner and late nights.";
+      canonicalPath = "/reserve";
     } else if (segs[0] === 'contact') {
       title = 'Contact — CLVCH · Hours, Location & Enquiries';
+      description = "Contact CLVCH — hours, address, phone and enquiries for events and private hire.";
     } else if (segs[0] === 'thank-you') {
       title = "CLVCH — You're In";
+      indexable = false;
     } else if (segs[0] === 'confirmed') {
       title = 'CLVCH — Welcome to The List';
+      indexable = false;
     } else if (segs[0] === 'privacy') {
       title = 'Privacy Policy — CLVCH';
+      description = "How CLVCH collects, uses and protects your personal information.";
     } else if (segs[0] === 'terms') {
       title = 'Terms of Service — CLVCH';
+      description = "The terms that apply when you use the CLVCH website or visit a CLVCH venue.";
+    } else {
+      // admin and unknown paths render the homepage — keep them out of the index
+      indexable = false;
+      canonicalPath = "/";
     }
+
+    description = description.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+    if (description.length > 160) description = description.slice(0, 157).replace(/\s+\S*$/, "") + "…";
+    const url = SITE + canonicalPath;
+    image = new URL(image, SITE + "/").href;
+
+    const setMeta = (attr, key, content) => {
+      let el = document.head.querySelector(`meta[${attr}="${key}"]`);
+      if (!el) { el = document.createElement("meta"); el.setAttribute(attr, key); document.head.appendChild(el); }
+      el.setAttribute("content", content);
+    };
+    let canonical = document.head.querySelector('link[rel="canonical"]');
+    if (!canonical) { canonical = document.createElement("link"); canonical.rel = "canonical"; document.head.appendChild(canonical); }
+    canonical.href = url;
+
     document.title = title;
+    setMeta("name", "description", description);
+    setMeta("name", "robots", indexable ? "index, follow" : "noindex, follow");
+    setMeta("property", "og:url", url);
+    setMeta("property", "og:title", title);
+    setMeta("property", "og:description", description);
+    setMeta("property", "og:image", image);
+    setMeta("name", "twitter:title", title);
+    setMeta("name", "twitter:description", description);
+    setMeta("name", "twitter:image", image);
   }
 
   window.scrollTo(0, 0);
