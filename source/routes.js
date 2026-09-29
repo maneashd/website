@@ -275,7 +275,7 @@ function renderHome() {
                 <div><dt>Opened</dt><dd>${l.opened}</dd></div>
               </dl>
               <div class="actions">
-                <a href="#/locations/${l.id}" data-link>Step Inside →</a>
+                <a href="/locations/${l.id}" data-link>Step Inside →</a>
               </div>
             </div>
           </div>
@@ -313,7 +313,7 @@ function renderLocations() {
     <!-- GRID -->
     <div class="loc-grid" id="locGridView">
       ${L.map((l, i) => `
-        <a href="#/locations/${l.id}" data-link class="loc-card">
+        <a href="/locations/${l.id}" data-link class="loc-card">
           <div class="cover"><img src="${l.hero}" alt=""></div>
           <div class="loc-card-tonight">
             <small>Tonight</small>
@@ -353,8 +353,8 @@ function renderVenue(id) {
   </div>
   <div class="venue-hero-inner">
     <div class="venue-crumbs">
-      <a href="#/" data-link>CLVCH</a> /
-      <a href="#/locations" data-link>Locations</a> /
+      <a href="/" data-link>CLVCH</a> /
+      <a href="/locations" data-link>Locations</a> /
       <b>${l.city}</b>
     </div>
     <div class="venue-hero-title">
@@ -408,7 +408,7 @@ ${renderGameday(l.id)}
         <div class="pillar-num">01 / Kitchen</div>
         <h3>Bites<em> ·</em></h3>
         <p>Chef-driven modern American. Menu rotates seasonally; the wood-fire never stops.</p>
-        <div class="pillar-list"><b>View</b> &nbsp;·&nbsp; <a href="#/menu" data-link style="color:var(--gold);">Full menu →</a></div>
+        <div class="pillar-list"><b>View</b> &nbsp;·&nbsp; <a href="/menu" data-link style="color:var(--gold);">Full menu →</a></div>
       </div>
     </div>
     <div class="pillar pillar--img-right">
@@ -440,7 +440,7 @@ ${renderGameday(l.id)}
       <h2>Table for<br><em>tonight?</em></h2>
       <p class="sub">${l.status === 'open' ? 'Reservations available — book your table online.' : l.status === 'prep' ? 'Reservations open from 4 PM today.' : 'Founding reservations open. Priority to members and wait-list.'}</p>
     </div>
-    <a href="#/reserve?city=${l.id}" class="bigcta" data-link data-cta="reserve">
+    <a href="/reserve?city=${l.id}" class="bigcta" data-link data-cta="reserve">
       <div>
         <div class="t">Reserve</div>
         <div class="s">→ ${l.city}</div>
@@ -468,8 +468,8 @@ ${renderGameday(l.id)}
       </div>` : ''}
       <div>
         <h4>Reservations</h4>
-        <a href="#/reserve?city=${l.id}" data-link class="venue-contact-link">Reserve a table →</a>
-        <br><a href="#/contact" data-link class="venue-contact-link" style="margin-top:8px;display:inline-block;opacity:0.55;font-size:12px;">All locations →</a>
+        <a href="/reserve?city=${l.id}" data-link class="venue-contact-link">Reserve a table →</a>
+        <br><a href="/contact" data-link class="venue-contact-link" style="margin-top:8px;display:inline-block;opacity:0.55;font-size:12px;">All locations →</a>
       </div>
     </div>
   </div>
@@ -481,7 +481,7 @@ ${renderFooter()}
 /* ─────── RESERVE ─────── */
 function renderReserve() {
   const L = publicLocations();
-  const params = new URLSearchParams(location.hash.split("?")[1] || "");
+  const params = new URLSearchParams(location.search);
   const cityId = params.get("city");
   const city = L.find(l => l.id === cityId) || L[0];
 
@@ -568,7 +568,7 @@ function renderContact() {
             ${l.tonight ? `<div><dt>Tonight</dt><dd>${h(l.tonight)}</dd></div>` : ''}
           </dl>
           <div class="actions" style="margin-top:28px;">
-            <a href="#/locations/${l.id}" data-link>Step Inside →</a>
+            <a href="/locations/${l.id}" data-link>Step Inside →</a>
           </div>
         </div>
       </div>
@@ -692,7 +692,7 @@ function renderThankYou() {
       <h1>Check your<br><em>email.</em></h1>
       <p class="sub" style="margin-top:24px;max-width:480px;font-size:16px;line-height:1.7;color:var(--bone-dim);">We sent you a confirmation link. Click it to lock in your spot on the CLVCH list — first access to new openings, residencies, and gameday tables.</p>
       <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:40px;">
-        <a href="#/" data-link class="cta" style="display:inline-block;padding:16px 32px;font-size:13px;">Back to home →</a>
+        <a href="/" data-link class="cta" style="display:inline-block;padding:16px 32px;font-size:13px;">Back to home →</a>
         <a href="https://instagram.com/clvch.usa" class="nav-social--ig" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:10px;padding:16px 24px;border:1px solid var(--line);font-family:var(--mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--bone-muted);transition:color 220ms;">Follow us on Instagram</a>
       </div>
     </div>
@@ -721,8 +721,8 @@ function renderConfirmed() {
       <h1>You're<br><em>confirmed.</em></h1>
       <p class="sub" style="margin-top:24px;max-width:480px;font-size:16px;line-height:1.7;color:var(--bone-dim);">Welcome to the CLVCH list. You'll hear from us first — new cities, exclusive tables, and nights worth showing up for.</p>
       <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:40px;">
-        <a href="#/reserve" data-link class="cta" style="display:inline-block;padding:16px 32px;font-size:13px;">Reserve a table →</a>
-        <a href="#/" data-link style="display:inline-flex;align-items:center;padding:16px 24px;border:1px solid var(--line);font-family:var(--mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--bone-muted);transition:color 220ms;">Back to home</a>
+        <a href="/reserve" data-link class="cta" style="display:inline-block;padding:16px 32px;font-size:13px;">Reserve a table →</a>
+        <a href="/" data-link style="display:inline-flex;align-items:center;padding:16px 24px;border:1px solid var(--line);font-family:var(--mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--bone-muted);transition:color 220ms;">Back to home</a>
       </div>
       ${socialSection}
     </div>
@@ -797,7 +797,7 @@ function renderTerms() {
   </div>
   <div class="static-page-body">
     <h2>Acceptance of terms</h2>
-    <p>By accessing or using the CLVCH website (clvchusa.com) or any CLVCH venue, you agree to these Terms of Service and our <a href="#/privacy" data-link>Privacy Policy</a>. If you do not agree, please do not use our services.</p>
+    <p>By accessing or using the CLVCH website (clvchusa.com) or any CLVCH venue, you agree to these Terms of Service and our <a href="/privacy" data-link>Privacy Policy</a>. If you do not agree, please do not use our services.</p>
 
     <h2>Age requirement and alcohol notice</h2>
     <p><strong>You must be 21 years of age or older to access this website and to enter any CLVCH venue.</strong> CLVCH holds active liquor licenses and serves alcohol at all locations. By accessing this site, you confirm you are of legal drinking age in your jurisdiction. We reserve the right to ask for valid photo ID at any time and to refuse service to anyone who cannot provide valid proof of age.</p>
@@ -846,7 +846,7 @@ function renderStories() {
     ? `<p class="mono" style="font-size:11px;letter-spacing:0.22em;color:var(--bone-muted);text-transform:uppercase;padding:80px 0;">No stories yet — check back soon.</p>`
     : `<div class="stories-grid">
         ${articles.map(a => `
-          <a class="story-card" href="#/stories/${a.id}" data-link>
+          <a class="story-card" href="/stories/${a.id}" data-link>
             <div class="story-card-cover">
               ${a.cover
                 ? `<img src="${a.cover}" alt="${h(a.title)}" loading="lazy">`
@@ -869,7 +869,7 @@ ${renderFooter()}
 
 function renderStory(slug) {
   const article = (window.CLVCH.articles || []).find(a => a.id === slug && a.published);
-  const back = `<a href="#/stories" data-link class="mono" style="font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--bone-muted);">← Stories</a>`;
+  const back = `<a href="/stories" data-link class="mono" style="font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--bone-muted);">← Stories</a>`;
 
   if (!article) {
     return `
@@ -910,28 +910,28 @@ function renderFooter() {
     <div class="foot-col">
       <h5>Cities</h5>
       <ul>
-        ${publicLocations().map(l => `<li><a href="#/locations/${l.id}" data-link>${l.city}${l.status === 'soon' ? ` (${l.opened})` : ''}</a></li>`).join('')}
+        ${publicLocations().map(l => `<li><a href="/locations/${l.id}" data-link>${l.city}${l.status === 'soon' ? ` (${l.opened})` : ''}</a></li>`).join('')}
       </ul>
     </div>
     <div class="foot-col">
       <h5>The House</h5>
       <ul>
-        <li><a href="#/" data-link>Experience</a></li>
-        <li><a href="#/menu" data-link>Menu</a></li>
-        <li><a href="#/stories" data-link>Stories</a></li>
+        <li><a href="/" data-link>Experience</a></li>
+        <li><a href="/menu" data-link>Menu</a></li>
+        <li><a href="/stories" data-link>Stories</a></li>
       </ul>
     </div>
     <div class="foot-col">
       <h5>Contact</h5>
       <ul>
-        <li><a href="#/contact" data-link>All locations</a></li>
+        <li><a href="/contact" data-link>All locations</a></li>
         <li><a href="mailto:info@clvchusa.com">info@clvchusa.com</a></li>
         <li><a href="mailto:info@clvchusa.com">Private Events</a></li>
       </ul>
     </div>
   </div>
   <div class="foot-base">
-    <span>© 2026 CLVCH Hospitality Group · <a href="#/privacy" data-link style="color:inherit;">Privacy</a> · <a href="#/terms" data-link style="color:inherit;">Terms</a></span>
+    <span>© 2026 CLVCH Hospitality Group · <a href="/privacy" data-link style="color:inherit;">Privacy</a> · <a href="/terms" data-link style="color:inherit;">Terms</a></span>
     <span>${publicLocations().map(l => l.city).join(' · ')}</span>
     <span>Bites · Beats · Booze</span>
   </div>
@@ -953,7 +953,7 @@ function renderAdminStories(slug) {
     <h1>Super only<em>.</em></h1>
     <p class="admin-gate-lede">Stories editing is reserved for super admins.</p>
     <div style="display:flex;gap:12px;margin-top:32px;flex-wrap:wrap;">
-      <a class="admin-btn admin-btn--primary" href="#/admin" data-link>← Admin home</a>
+      <a class="admin-btn admin-btn--primary" href="/admin" data-link>← Admin home</a>
       <button class="admin-btn admin-btn--ghost" data-admin-signout>Sign out</button>
     </div>
   </div>
@@ -970,15 +970,15 @@ function renderAdminStories(slug) {
 
   const tabs = `
   <div class="admin-tabs">
-    <a href="#/admin" data-link>Admin home</a>
-    <a href="#/admin/home" data-link>Home page</a>
-    <a href="#/admin/stories" data-link class="${!isEditor ? 'on' : ''}">Stories</a>
-    <a href="#/admin/menu" data-link>Menu</a>
-    ${L.map(l => `<a href="#/admin/${l.id}" data-link>${h(l.city)}</a>`).join('')}
+    <a href="/admin" data-link>Admin home</a>
+    <a href="/admin/home" data-link>Home page</a>
+    <a href="/admin/stories" data-link class="${!isEditor ? 'on' : ''}">Stories</a>
+    <a href="/admin/menu" data-link>Menu</a>
+    ${L.map(l => `<a href="/admin/${l.id}" data-link>${h(l.city)}</a>`).join('')}
   </div>`;
 
   const editorHtml = (!isNew && !article) ? `
-    <p style="color:var(--bone-muted);padding:40px 0;">Article not found. <a href="#/admin/stories" data-link style="color:var(--bone);">← Back to Stories</a></p>
+    <p style="color:var(--bone-muted);padding:40px 0;">Article not found. <a href="/admin/stories" data-link style="color:var(--bone);">← Back to Stories</a></p>
   ` : `
     <form class="admin-content" data-article-form>
       <div class="admin-form-grid admin-form-grid--2" style="margin-bottom:24px;">
@@ -1032,7 +1032,7 @@ function renderAdminStories(slug) {
       <div class="admin-form-foot" style="margin-top:28px;">
         <div class="admin-form-foot-msg" data-form-msg></div>
         <div class="admin-form-foot-actions">
-          <a href="#/admin/stories" data-link class="admin-btn admin-btn--ghost">Cancel</a>
+          <a href="/admin/stories" data-link class="admin-btn admin-btn--ghost">Cancel</a>
           <button type="submit" class="admin-btn admin-btn--primary">Save article</button>
         </div>
       </div>
@@ -1074,7 +1074,7 @@ function renderAdminStories(slug) {
 <section class="admin" data-stories-admin="">
   <div class="admin-head">
     <div>
-      <a href="#/admin" data-link class="admin-rolebar-link" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;font-size:12px;">← Admin home</a>
+      <a href="/admin" data-link class="admin-rolebar-link" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;font-size:12px;">← Admin home</a>
       <div class="eyebrow" style="margin-bottom:12px;">Brand · Stories</div>
       <h1>${isEditor ? (isNew ? 'New story<em>.</em>' : 'Edit<em>.</em>') : 'Stories<em>.</em>'}</h1>
       <p style="color:var(--bone-muted);max-width:60ch;font-family:var(--body);font-size:14px;line-height:1.55;">
@@ -1088,7 +1088,7 @@ function renderAdminStories(slug) {
         <span class="admin-rolechip-dot"></span>
         <div><small>Signed in as</small><b>Super admin</b></div>
       </div>
-      <a href="#/" data-link class="admin-rolebar-link">← View site</a>
+      <a href="/" data-link class="admin-rolebar-link">← View site</a>
       <button class="admin-rolebar-link admin-rolebar-link--danger" data-admin-signout>Sign out</button>
     </div>
   </div>
@@ -1114,7 +1114,7 @@ function renderAdminMenu() {
     <h1>Super only<em>.</em></h1>
     <p class="admin-gate-lede">Menu editing is reserved for super admins.</p>
     <div style="display:flex;gap:12px;margin-top:32px;flex-wrap:wrap;">
-      <a class="admin-btn admin-btn--primary" href="#/admin" data-link>← Admin home</a>
+      <a class="admin-btn admin-btn--primary" href="/admin" data-link>← Admin home</a>
       <button class="admin-btn admin-btn--ghost" data-admin-signout>Sign out</button>
     </div>
   </div>
@@ -1127,11 +1127,11 @@ function renderAdminMenu() {
 
   const tabs = `
   <div class="admin-tabs">
-    <a href="#/admin" data-link>Admin home</a>
-    <a href="#/admin/home" data-link>Home page</a>
-    <a href="#/admin/stories" data-link>Stories</a>
-    <a href="#/admin/menu" data-link class="on">Menu</a>
-    ${L.map(l => `<a href="#/admin/${l.id}" data-link>${h(l.city)}</a>`).join('')}
+    <a href="/admin" data-link>Admin home</a>
+    <a href="/admin/home" data-link>Home page</a>
+    <a href="/admin/stories" data-link>Stories</a>
+    <a href="/admin/menu" data-link class="on">Menu</a>
+    ${L.map(l => `<a href="/admin/${l.id}" data-link>${h(l.city)}</a>`).join('')}
   </div>`;
 
   const mkItemRow = (item, i) => `
@@ -1165,7 +1165,7 @@ function renderAdminMenu() {
 <section class="admin" data-menu-admin="">
   <div class="admin-head">
     <div>
-      <a href="#/admin" data-link class="admin-rolebar-link" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;font-size:12px;">← Admin home</a>
+      <a href="/admin" data-link class="admin-rolebar-link" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;font-size:12px;">← Admin home</a>
       <div class="eyebrow" style="margin-bottom:12px;">Brand · Menu</div>
       <h1>Edit the <em>Menu.</em></h1>
       <p style="color:var(--bone-muted);max-width:60ch;font-family:var(--body);font-size:14px;line-height:1.55;">Edit items, prices, and tags. Changes go live the moment you save.</p>
@@ -1175,7 +1175,7 @@ function renderAdminMenu() {
         <span class="admin-rolechip-dot"></span>
         <div><small>Signed in as</small><b>Super admin</b></div>
       </div>
-      <a href="#/" data-link class="admin-rolebar-link">← View site</a>
+      <a href="/" data-link class="admin-rolebar-link">← View site</a>
       <button class="admin-rolebar-link admin-rolebar-link--danger" data-admin-signout>Sign out</button>
     </div>
   </div>
@@ -1246,7 +1246,7 @@ function renderAdminGate(scopeCityId) {
       `).join("")}
     </div>
 
-    <a href="#/" data-link class="admin-gate-back">← Back to clvchusa.com</a>
+    <a href="/" data-link class="admin-gate-back">← Back to clvchusa.com</a>
   </div>
 </section>
   `;
@@ -1679,7 +1679,7 @@ function renderAdminHomeBlock() {
     <div class="admin-form-foot-msg" data-form-msg></div>
     <div class="admin-form-foot-actions">
       <button type="button" class="admin-btn admin-btn--ghost" data-home-reset>Reset home to default</button>
-      <a href="#/" data-link class="admin-btn admin-btn--ghost">Preview home →</a>
+      <a href="/" data-link class="admin-btn admin-btn--ghost">Preview home →</a>
       <button type="submit" class="admin-btn admin-btn--primary">Save changes</button>
     </div>
   </div>
@@ -1709,7 +1709,7 @@ function renderAdmin(scopeCityId) {
     <h1>Wrong <em>door.</em></h1>
     <p class="admin-gate-lede">You're a manager for a different city. Head back and select your location.</p>
     <div style="display:flex;gap:12px;margin-top:32px;flex-wrap:wrap;">
-      <a class="admin-btn admin-btn--primary" href="#/admin" data-link>← Admin home</a>
+      <a class="admin-btn admin-btn--primary" href="/admin" data-link>← Admin home</a>
       <button class="admin-btn admin-btn--ghost" data-admin-signout>Sign out</button>
     </div>
   </div>
@@ -1725,7 +1725,7 @@ function renderAdmin(scopeCityId) {
     <h1>Super only<em>.</em></h1>
     <p class="admin-gate-lede">Home page editing is reserved for super admins. Head back to your city dashboard.</p>
     <div style="display:flex;gap:12px;margin-top:32px;flex-wrap:wrap;">
-      <a class="admin-btn admin-btn--primary" href="#/admin" data-link>← Admin home</a>
+      <a class="admin-btn admin-btn--primary" href="/admin" data-link>← Admin home</a>
       <button class="admin-btn admin-btn--ghost" data-admin-signout>Sign out</button>
     </div>
   </div>
@@ -1733,7 +1733,7 @@ function renderAdmin(scopeCityId) {
   }
 
   if (isScoped && cities.length === 0) {
-    return `<div class="admin"><h1>Unknown city.</h1><a href="#/admin" data-link style="color:var(--bone);">← Admin home</a></div>`;
+    return `<div class="admin"><h1>Unknown city.</h1><a href="/admin" data-link style="color:var(--bone);">← Admin home</a></div>`;
   }
 
   const roleLabel = isSuper ? "Super admin" : (() => {
@@ -1749,7 +1749,7 @@ function renderAdmin(scopeCityId) {
 <section class="admin" data-admin-scope="${scopeCityId || 'all'}">
   <div class="admin-head">
     <div>
-      ${isScoped || isHome ? `<a href="#/admin" data-link class="admin-rolebar-link" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;font-size:12px;">← Admin home</a>` : ''}
+      ${isScoped || isHome ? `<a href="/admin" data-link class="admin-rolebar-link" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;font-size:12px;">← Admin home</a>` : ''}
       <div class="eyebrow" style="margin-bottom:12px;">${isScoped ? cities[0].city + ' · Dashboard' : isHome ? 'Brand · Home page' : 'House control'}</div>
       <h1>${isScoped ? cities[0].city + '<em>.</em>' : isHome ? 'Home<em>.</em>' : 'The <em>House.</em>'}</h1>
       <p style="color:var(--bone-muted);max-width:60ch;font-family:var(--body);font-size:14px;line-height:1.55;">
@@ -1770,21 +1770,21 @@ function renderAdmin(scopeCityId) {
           <b>${roleLabel}</b>
         </div>
       </div>
-      <a href="#/" data-link class="admin-rolebar-link">← View site</a>
+      <a href="/" data-link class="admin-rolebar-link">← View site</a>
       <button class="admin-rolebar-link admin-rolebar-link--danger" data-admin-signout>Sign out</button>
     </div>
   </div>
 
   ${isScoped || isHome ? `
     <div class="admin-tabs">
-      <a href="#/admin" data-link>Admin home</a>
+      <a href="/admin" data-link>Admin home</a>
       ${isSuper ? `
-        <a href="#/admin/home" data-link class="${isHome ? 'on' : ''}">Home page</a>
-        <a href="#/admin/stories" data-link>Stories</a>
-        <a href="#/admin/menu" data-link>Menu</a>
-        ${L.map(l => `<a href="#/admin/${l.id}" data-link class="${scopeCityId===l.id ? 'on' : ''}">${l.city}${l.disabled?' <small>· off</small>':''}</a>`).join("")}
+        <a href="/admin/home" data-link class="${isHome ? 'on' : ''}">Home page</a>
+        <a href="/admin/stories" data-link>Stories</a>
+        <a href="/admin/menu" data-link>Menu</a>
+        ${L.map(l => `<a href="/admin/${l.id}" data-link class="${scopeCityId===l.id ? 'on' : ''}">${l.city}${l.disabled?' <small>· off</small>':''}</a>`).join("")}
       ` : `
-        <a href="#/admin/${scopeCityId}" data-link class="on">${cities[0].city}</a>
+        <a href="/admin/${scopeCityId}" data-link class="on">${cities[0].city}</a>
       `}
     </div>
   ` : ''}
@@ -1793,17 +1793,17 @@ function renderAdmin(scopeCityId) {
 
     ${isSuper ? `
     <div class="admin-brand-cards">
-      <a href="#/admin/home" data-link style="display:block;text-decoration:none;">
+      <a href="/admin/home" data-link style="display:block;text-decoration:none;">
         <div class="eyebrow" style="margin-bottom:16px;">Brand</div>
         <div style="font-family:var(--display);font-size:40px;letter-spacing:0.02em;line-height:1;">Home page</div>
         <div class="mono" style="font-size:10px;letter-spacing:0.22em;color:var(--bone-muted);text-transform:uppercase;margin-top:12px;">Hero · pillars · reserve strip →</div>
       </a>
-      <a href="#/admin/stories" data-link style="display:block;text-decoration:none;">
+      <a href="/admin/stories" data-link style="display:block;text-decoration:none;">
         <div class="eyebrow" style="margin-bottom:16px;">Brand</div>
         <div style="font-family:var(--display);font-size:40px;letter-spacing:0.02em;line-height:1;">Stories</div>
         <div class="mono" style="font-size:10px;letter-spacing:0.22em;color:var(--bone-muted);text-transform:uppercase;margin-top:12px;">${_artPub} published · ${_artDraft} draft →</div>
       </a>
-      <a href="#/admin/menu" data-link style="display:block;text-decoration:none;">
+      <a href="/admin/menu" data-link style="display:block;text-decoration:none;">
         <div class="eyebrow" style="margin-bottom:16px;">Brand</div>
         <div style="font-family:var(--display);font-size:40px;letter-spacing:0.02em;line-height:1;">Menu</div>
         <div class="mono" style="font-size:10px;letter-spacing:0.22em;color:var(--bone-muted);text-transform:uppercase;margin-top:12px;">${(window.CLVCH.menu.kitchen||[]).length + (window.CLVCH.menu.brunch||[]).length + (window.CLVCH.menu.bar||[]).length} items across 3 sections →</div>
@@ -1834,7 +1834,7 @@ function renderAdmin(scopeCityId) {
           ${l.tonight ? `<div style="color:var(--bone-dim);font-size:13px;margin-top:16px;line-height:1.6;">${l.tonight}<br>${l.tonightTime}</div>` : ''}
         `;
         return accessible
-          ? `<a href="#/admin/${l.id}" data-link style="display:block;text-decoration:none;">${inner}</a>`
+          ? `<a href="/admin/${l.id}" data-link style="display:block;text-decoration:none;">${inner}</a>`
           : `<div style="opacity:0.25;cursor:not-allowed;">${inner}</div>`;
       }).join("")}
     </div>
@@ -1901,7 +1901,7 @@ function renderAdmin(scopeCityId) {
       <div class="admin-cityindex-head" style="border-bottom:1px solid var(--line-soft);margin-bottom:0;">
         <h2>Home page <small>· global</small></h2>
         <div class="admin-cityindex-actions">
-          <a href="#/" data-link class="admin-btn admin-btn--ghost">Preview home →</a>
+          <a href="/" data-link class="admin-btn admin-btn--ghost">Preview home →</a>
         </div>
       </div>
       ${renderAdminHomeBlock()}
@@ -2134,7 +2134,7 @@ function route() {
     adminSection.querySelectorAll("[data-admin-signout]").forEach(el => {
       el.addEventListener("click", () => {
         setAdminRole("");
-        location.hash = "#/admin";
+        navigate("/admin");
         route();
       });
     });
@@ -2591,13 +2591,13 @@ function route() {
   // ─── Stories admin wiring ───
   if (adminSection && adminSection.hasAttribute('data-stories-admin')) {
     adminSection.querySelector("[data-stories-new]")?.addEventListener("click", () => {
-      location.hash = "#/admin/stories/new";
+      navigate("/admin/stories/new");
     });
 
     // Edit buttons
     adminSection.querySelectorAll("[data-stories-edit]").forEach(btn => {
       btn.addEventListener("click", () => {
-        location.hash = "#/admin/stories/" + btn.dataset.storiesEdit;
+        navigate("/admin/stories/" + btn.dataset.storiesEdit);
       });
     });
 
@@ -2695,7 +2695,7 @@ function route() {
           : existing.map(a => a.id === id ? article : a);
         window.CLVCH.saveArticles();
         setMsg("Saved.", true);
-        setTimeout(() => { location.hash = "#/admin/stories"; }, 600);
+        setTimeout(() => { navigate("/admin/stories"); }, 600);
       });
     }
   }
@@ -2796,15 +2796,15 @@ window.addEventListener("DOMContentLoaded", route);
 // Re-render public pages whenever the city list changes (e.g. after admin edits).
 // Skip when we're already on /admin — admin pages re-render themselves on action.
 window.addEventListener("clvch:locations-changed", () => {
-  if (location.hash.startsWith("#/admin")) return;
+  if (location.pathname.startsWith("/admin")) return;
   route();
 });
 window.addEventListener("clvch:home-changed", () => {
-  if (location.hash.startsWith("#/admin")) return;
+  if (location.pathname.startsWith("/admin")) return;
   route();
 });
 window.addEventListener('clvch:sanity-loaded', () => {
-  if (!location.hash.startsWith('#/admin')) route();
+  if (!location.pathname.startsWith('/admin')) route();
 });
 
 // Anchor-style nav links → scroll to a section on home
@@ -2823,8 +2823,8 @@ document.addEventListener("click", (e) => {
     const top = el.getBoundingClientRect().top + window.scrollY - 80;
     window.scrollTo({ top, behavior: "smooth" });
   };
-  if (location.hash !== "" && location.hash !== "#/") {
-    location.hash = "#/";
+  if (location.pathname !== "/") {
+    navigate("/");
     setTimeout(goScroll, 50);
   } else {
     goScroll();
