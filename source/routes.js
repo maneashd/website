@@ -2786,9 +2786,13 @@ document.addEventListener("click", (e) => {
 });
 
 // Old hash links (e.g. clvchusa.com/#/menu shared before the switch) → real URL
-if (location.hash.startsWith("#/")) {
+function redirectHashLink() {
+  if (!location.hash.startsWith("#/")) return false;
   window.history.replaceState({}, "", location.hash.slice(1));
+  return true;
 }
+redirectHashLink();
+window.addEventListener("hashchange", () => { if (redirectHashLink()) route(); });
 
 window.addEventListener("popstate", route);
 window.addEventListener("DOMContentLoaded", route);
