@@ -1913,8 +1913,9 @@ function renderAdmin(scopeCityId) {
 
 /* ═══ Router ═══ */
 function route() {
-  const hash = location.hash.replace(/^#/, "") || "/";
-  const [path] = hash.split("?");
+  let path = location.pathname;
+  if (path.startsWith("/source/")) path = path.slice(7); // strip /source/ if present
+  if (path.endsWith("/index.html")) path = path.slice(0, -"index.html".length);
   const segs = path.split("/").filter(Boolean);
 
   let html = "";
