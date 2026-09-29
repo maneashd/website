@@ -1984,10 +1984,6 @@ function route() {
     a.classList.toggle("active", href !== "/" && path.startsWith(href));
   });
 
-  // wire data-link clicks (smooth, no full reload — hash does that)
-  outlet.querySelectorAll('[data-link]').forEach(a => {
-    a.addEventListener("click", () => { /* hash router handles it */ });
-  });
 
   // ─── Menu tabs ───
   const menuTabBtns = outlet.querySelectorAll('[data-menu-tab]');
@@ -2770,7 +2766,31 @@ function route() {
   }
 }
 
-window.addEventListener("hashchange", route);
+/* ═══ History API navigation ═══ */
+function navigate(href) {
+  window.history.pushState({}, "", href);
+  route();
+}
+window.CLVCH.navigate = navigate;
+
+// Internal [data-link] clicks (page content and nav) change the URL without a reload.
+// Modifier clicks (new tab/window) and the scroll-to-section nav links are left alone.
+document.addEventListener("click", (e) => {
+  const a = e.target.closest("a[data-link]");
+  if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  if (NAV_ANCHORS[a.id]) return;
+  const href = a.getAttribute("href");
+  if (!href || !href.startsWith("/")) return;
+  e.preventDefault();
+  navigate(href);
+});
+
+// Old hash links (e.g. clvchusa.com/#/menu shared before the switch) → real URL
+if (location.hash.startsWith("#/")) {
+  window.history.replaceState({}, "", location.hash.slice(1));
+}
+
+window.addEventListener("popstate", route);
 window.addEventListener("DOMContentLoaded", route);
 
 // Re-render public pages whenever the city list changes (e.g. after admin edits).
