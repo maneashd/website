@@ -1913,14 +1913,13 @@ function renderAdmin(scopeCityId) {
 
 /* ═══ Router ═══ */
 function route() {
-  window.CLVCH.cityGate?.cancelSchedule();
   const hash = location.hash.replace(/^#/, "") || "/";
   const [path] = hash.split("?");
   const segs = path.split("/").filter(Boolean);
 
   let html = "";
   if (segs.length === 0) html = renderHome();
-  else if (segs[0] === "locations" && segs[1]) { html = renderVenue(segs[1]); window.CLVCH.cityGate?.scheduleFor(segs[1]); }
+  else if (segs[0] === "locations" && segs[1]) html = renderVenue(segs[1]);
   else if (segs[0] === "locations") html = renderLocations();
   else if (segs[0] === "reserve") html = renderReserve();
   else if (segs[0] === "contact") html = renderContact();
@@ -1935,6 +1934,10 @@ function route() {
   else html = renderHome();
 
   outlet.innerHTML = html;
+
+  // VIP list popup: skip on pages where the visitor has just joined
+  if (segs[0] === "thank-you" || segs[0] === "confirmed") window.CLVCH.cityGate?.cancelSchedule();
+  else window.CLVCH.cityGate?.scheduleFor(segs[0] === "locations" && segs[1] ? segs[1] : null);
 
   // ─── Document title ───
   {
@@ -2058,7 +2061,6 @@ function route() {
       }
       const btn = notifyForm.querySelector('#notifyBtn');
       if (btn) { btn.disabled = true; btn.textContent = 'Joining...'; }
-      try { localStorage.setItem('clvch_email', emailVal); } catch {}
       try {
         const res = await fetch('/api/subscribe', {
           method: 'POST',
@@ -2067,7 +2069,11 @@ function route() {
         });
         const data = await res.json().catch(() => ({}));
         if (res.ok && data.success) {
-          try { localStorage.setItem('clvch_notify_seen', 'true'); } catch {}
+          try {
+            localStorage.setItem('clvch_notify_seen', 'true');
+            localStorage.setItem('clvch_email', emailVal);
+            localStorage.setItem('clvch_vip_joined', 'true');
+          } catch {}
           const done = document.createElement('p');
           done.className = 'gdposter-notify-done';
           done.textContent = "You're on the list. We'll be in touch.";

@@ -21,7 +21,15 @@ export default async function handler(req, res) {
     return res.status(400).json({ success: false, message: 'Phone required for update' });
   }
 
-  const listIds = [parseInt(process.env.BREVO_LIST_ID, 10)];
+  const apiKey = (process.env.BREVO_API_KEY || '').trim();
+  if (!apiKey) {
+    console.error('[subscribe] BREVO_API_KEY is not set in this environment');
+    return res.status(500).json({ success: false, message: 'Something went wrong, please try again.', code: 'missing_api_key' });
+  }
+
+  // Defaults to the "CLVCH VIP List" (id 4) if BREVO_LIST_ID is missing or not a number
+  const listId = parseInt((process.env.BREVO_LIST_ID || '').trim(), 10);
+  const listIds = [Number.isFinite(listId) && listId > 0 ? listId : 4];
   const attributes = {};
   if (phone)  attributes.SMS    = phone;
   if (city)   attributes.CITY   = city;
@@ -38,7 +46,7 @@ export default async function handler(req, res) {
         {
           method: 'PUT',
           headers: {
-            'api-key':      process.env.BREVO_API_KEY,
+            'api-key':      apiKey,
             'content-type': 'application/json',
             'accept':       'application/json',
           },
@@ -51,7 +59,7 @@ export default async function handler(req, res) {
         brevoRes = await fetch('https://api.brevo.com/v3/contacts', {
           method: 'POST',
           headers: {
-            'api-key':      process.env.BREVO_API_KEY,
+            'api-key':      apiKey,
             'content-type': 'application/json',
             'accept':       'application/json',
           },
@@ -63,7 +71,7 @@ export default async function handler(req, res) {
       brevoRes = await fetch('https://api.brevo.com/v3/contacts', {
         method: 'POST',
         headers: {
-          'api-key':      process.env.BREVO_API_KEY,
+          'api-key':      apiKey,
           'content-type': 'application/json',
           'accept':       'application/json',
         },
@@ -93,6 +101,28 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true });
   }
 
+  // Brevo rejected the phone number: still get the email onto the list
+  const errMsg = (brevoErrorBody.message || '').toLowerCase();
+  if (!isUpdate && attributes.SMS && (errMsg.includes('sms') || errMsg.includes('phone'))) {
+    console.error('[subscribe] Brevo rejected phone, retrying without it:', brevoErrorBody);
+    delete attributes.SMS;
+    try {
+      const retry = await fetch('https://api.brevo.com/v3/contacts', {
+        method: 'POST',
+        headers: { 'api-key': apiKey, 'content-type': 'application/json', 'accept': 'application/json' },
+        body: JSON.stringify({ email, attributes, listIds, updateEnabled: true }),
+        signal: AbortSignal.timeout(10000),
+      });
+      if (retry.ok) return res.status(200).json({ success: true });
+      let retryBody;
+      try { retryBody = await retry.json(); } catch { retryBody = {}; }
+      console.error('[subscribe] Brevo retry error:', retry.status, retryBody);
+    } catch (err) {
+      console.error('[subscribe] network error on retry:', err.message);
+    }
+  }
+
   console.error('[subscribe] Brevo error:', brevoRes.status, brevoErrorBody);
-  return res.status(500).json({ success: false, message: 'Something went wrong, please try again.' });
+  // `code` is Brevo's error code (e.g. "unauthorized") — visible in the browser's network tab for debugging
+  return res.status(500).json({ success: false, message: 'Something went wrong, please try again.', code: brevoErrorBody.code || `brevo_${brevoRes.status}` });
 }
