@@ -975,7 +975,7 @@ function renderThankYou() {
       <p class="sub" style="margin-top:24px;max-width:480px;font-size:16px;line-height:1.7;color:var(--bone-dim);">We sent you a confirmation link. Click it to lock in your spot on the CLVCH list — first access to new openings, residencies, and gameday tables.</p>
       <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:40px;">
         <a href="/" data-link class="cta" style="display:inline-block;padding:16px 32px;font-size:13px;">Back to home →</a>
-        <a href="https://instagram.com/clvch.usa" class="nav-social--ig" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:10px;padding:16px 24px;border:1px solid var(--line);font-family:var(--mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--bone-muted);transition:color 220ms;">Follow us on Instagram</a>
+        <a href="https://www.instagram.com/clvch_atlanta" class="nav-social--ig" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:10px;padding:16px 24px;border:1px solid var(--line);font-family:var(--mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--bone-muted);transition:color 220ms;">Follow us on Instagram</a>
       </div>
     </div>
   </div>
@@ -990,8 +990,8 @@ function renderConfirmed() {
   <div class="eyebrow" style="margin-bottom:16px;color:var(--bone-muted);">FOLLOW THE FLOOR.</div>
   <p style="font-family:var(--editorial);font-size:17px;color:var(--bone-dim);line-height:1.5;font-weight:300;margin-bottom:24px;">Follow CLVCH for first looks.</p>
   <div style="display:flex;gap:16px;flex-wrap:wrap;">
-    <a href="https://instagram.com/clvch.usa" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;padding:16px 24px;border:1px solid var(--line);font-family:var(--mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--bone-muted);transition:color 220ms;">Follow on Instagram</a>
-    <a href="https://facebook.com/clvchusa" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;padding:16px 24px;border:1px solid var(--line);font-family:var(--mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--bone-muted);transition:color 220ms;">Follow on Facebook</a>
+    <a href="https://www.instagram.com/clvch_atlanta" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;padding:16px 24px;border:1px solid var(--line);font-family:var(--mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--bone-muted);transition:color 220ms;">Follow on Instagram</a>
+    <a href="https://www.facebook.com/clvchatlanta" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;padding:16px 24px;border:1px solid var(--line);font-family:var(--mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--bone-muted);transition:color 220ms;">Follow on Facebook</a>
   </div>
 </div>`;
 
