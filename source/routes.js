@@ -542,12 +542,9 @@ function renderNewsletter() {
 <section class="newsletter-page">
   <div class="newsletter-container">
     <div class="newsletter-header">
-      <div class="newsletter-logo">
-        <svg viewBox="0 0 60 60" width="40" height="40" style="fill:var(--bone);">
-          <text x="30" y="45" text-anchor="middle" font-family="var(--display)" font-size="50" letter-spacing="0.02em">C</text>
-        </svg>
-      </div>
-      <h1 class="newsletter-title">CLVCH<em>.</em></h1>
+      <h1 class="newsletter-title">
+        <img src="/assets/CLVCH-header-logo.png" alt="CLVCH — Bites · Beats · Booze" class="newsletter-logo-img" />
+      </h1>
       <p class="newsletter-subtitle">VIP Updates & Exclusive Offers</p>
     </div>
 
@@ -668,26 +665,17 @@ function renderNewsletter() {
     margin-bottom:40px;
   }
 
-  .newsletter-logo {
-    display:flex;
-    justify-content:center;
+  .newsletter-title {
+    margin:0;
     margin-bottom:20px;
   }
 
-  .newsletter-title {
-    font-family:var(--display);
-    font-size:clamp(36px, 8vw, 56px);
-    letter-spacing:0.02em;
-    line-height:1;
-    margin:0;
-    margin-bottom:12px;
-    color:var(--bone);
-  }
-
-  .newsletter-title em {
-    color:var(--gold);
-    font-style:italic;
-    font-family:var(--display);
+  .newsletter-logo-img {
+    display:block;
+    margin:0 auto;
+    width:clamp(160px, 40vw, 260px);
+    height:auto;
+    max-width:100%;
   }
 
   .newsletter-subtitle {
@@ -744,8 +732,8 @@ function renderNewsletter() {
       margin-bottom:32px;
     }
 
-    .newsletter-title {
-      font-size:32px;
+    .newsletter-logo-img {
+      width:clamp(140px, 35vw, 180px);
     }
 
     .newsletter-copy {
