@@ -536,6 +536,264 @@ ${renderFooter()}
   `;
 }
 
+/* ─────── NEWSLETTER ─────── */
+function renderNewsletter() {
+  return `
+<section class="newsletter-page">
+  <div class="newsletter-container">
+    <div class="newsletter-header">
+      <div class="newsletter-logo">
+        <svg viewBox="0 0 60 60" width="40" height="40" style="fill:var(--bone);">
+          <text x="30" y="45" text-anchor="middle" font-family="var(--display)" font-size="50" letter-spacing="0.02em">C</text>
+        </svg>
+      </div>
+      <h1 class="newsletter-title">CLVCH<em>.</em></h1>
+      <p class="newsletter-subtitle">VIP Updates & Exclusive Offers</p>
+    </div>
+
+    <div class="newsletter-copy">
+      <p class="newsletter-lede">Get first access to events, exclusive deals, and insider updates from CLVCH.</p>
+    </div>
+
+    <form id="newsletterForm" class="newsletter-form" style="max-width:480px;margin:0 auto;">
+      <div class="form-group" style="position:relative;">
+        <input
+          type="email"
+          id="newsletterEmail"
+          class="newsletter-input"
+          placeholder="Enter your email"
+          required
+          autocomplete="email"
+          style="
+            width:100%;
+            padding:16px 18px;
+            background:var(--ink-3);
+            border:1px solid var(--line);
+            color:var(--bone);
+            font-size:14px;
+            font-family:inherit;
+            letter-spacing:0.01em;
+            box-sizing:border-box;
+            transition:border-color 0.2s;
+          "
+        >
+      </div>
+      <button
+        type="submit"
+        id="newsletterBtn"
+        class="newsletter-btn"
+        style="
+          width:100%;
+          margin-top:16px;
+          padding:14px 18px;
+          background:var(--bone);
+          color:var(--ink);
+          border:none;
+          font-family:var(--display);
+          font-size:13px;
+          letter-spacing:0.08em;
+          text-transform:uppercase;
+          font-weight:600;
+          cursor:pointer;
+          transition:background-color 0.2s, color 0.2s;
+        "
+      >
+        Join
+      </button>
+      <p class="newsletter-error" style="
+        color:#ff8b7e;
+        font-family:var(--mono);
+        font-size:10px;
+        letter-spacing:0.12em;
+        margin-top:12px;
+        text-transform:uppercase;
+        display:none;
+      "></p>
+    </form>
+
+    <p class="newsletter-privacy" style="
+      margin-top:32px;
+      text-align:center;
+      color:var(--bone-muted);
+      font-size:11px;
+      letter-spacing:0.08em;
+      text-transform:uppercase;
+      max-width:480px;
+      margin-left:auto;
+      margin-right:auto;
+    ">
+      We respect your privacy. Unsubscribe any time.
+    </p>
+  </div>
+</section>
+
+<style>
+  .newsletter-page {
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--ink);
+    padding:40px 20px;
+  }
+
+  .newsletter-container {
+    width:100%;
+    max-width:600px;
+  }
+
+  .newsletter-header {
+    text-align:center;
+    margin-bottom:40px;
+  }
+
+  .newsletter-logo {
+    display:flex;
+    justify-content:center;
+    margin-bottom:20px;
+  }
+
+  .newsletter-title {
+    font-family:var(--display);
+    font-size:clamp(36px, 8vw, 56px);
+    letter-spacing:0.02em;
+    line-height:1;
+    margin:0;
+    margin-bottom:12px;
+    color:var(--bone);
+  }
+
+  .newsletter-title em {
+    color:var(--gold);
+    font-style:italic;
+    font-family:var(--display);
+  }
+
+  .newsletter-subtitle {
+    margin:0;
+    color:var(--bone-muted);
+    font-size:12px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+  }
+
+  .newsletter-copy {
+    text-align:center;
+    margin-bottom:36px;
+  }
+
+  .newsletter-lede {
+    margin:0;
+    color:var(--bone-dim);
+    font-size:16px;
+    line-height:1.6;
+    max-width:400px;
+    margin-left:auto;
+    margin-right:auto;
+  }
+
+  .newsletter-form {
+    margin:0;
+  }
+
+  .newsletter-input:focus {
+    outline:none;
+    border-color:var(--bone);
+  }
+
+  .newsletter-btn:hover:not(:disabled) {
+    background:var(--bone-dim);
+  }
+
+  .newsletter-btn:active:not(:disabled) {
+    background:var(--bone);
+  }
+
+  .newsletter-btn:disabled {
+    opacity:0.5;
+    cursor:not-allowed;
+  }
+
+  @media (max-width: 600px) {
+    .newsletter-page {
+      padding:20px 16px;
+    }
+
+    .newsletter-header {
+      margin-bottom:32px;
+    }
+
+    .newsletter-title {
+      font-size:32px;
+    }
+
+    .newsletter-copy {
+      margin-bottom:28px;
+    }
+
+    .newsletter-lede {
+      font-size:15px;
+    }
+  }
+</style>
+
+<script>
+  (function() {
+    const form = document.getElementById('newsletterForm');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const emailInput = form.querySelector('#newsletterEmail');
+      const emailVal = emailInput.value.trim();
+      const btn = form.querySelector('#newsletterBtn');
+      const errEl = form.querySelector('.newsletter-error');
+
+      // Validate email
+      if (!emailVal || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(emailVal)) {
+        errEl.textContent = 'Please enter a valid email address.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      errEl.style.display = 'none';
+      btn.disabled = true;
+      btn.textContent = 'Joining...';
+
+      try {
+        const res = await fetch('/api/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: emailVal, source: 'newsletter' }),
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (res.ok && data.success) {
+          try {
+            localStorage.setItem('clvch_email', emailVal);
+            localStorage.setItem('clvch_newsletter_joined', 'true');
+          } catch {}
+          window.location.href = '/thank-you';
+        } else {
+          btn.disabled = false;
+          btn.textContent = 'Join';
+          errEl.textContent = data.message || "Couldn't add you. Try again?";
+          errEl.style.display = 'block';
+        }
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Join';
+        errEl.textContent = "Couldn't add you. Try again?";
+        errEl.style.display = 'block';
+      }
+    });
+  })();
+</script>
+${renderFooter()}
+  `;
+}
+
 /* ─────── CONTACT ─────── */
 function renderContact() {
   const L = publicLocations();
@@ -1923,6 +2181,7 @@ function route() {
   else if (segs[0] === "locations" && segs[1]) html = renderVenue(segs[1]);
   else if (segs[0] === "locations") html = renderLocations();
   else if (segs[0] === "reserve") html = renderReserve();
+  else if (segs[0] === "newsletter") html = renderNewsletter();
   else if (segs[0] === "contact") html = renderContact();
   else if (segs[0] === "menu") html = renderMenu();
   else if (segs[0] === "privacy") html = renderPrivacy();
@@ -1988,6 +2247,10 @@ function route() {
     } else if (segs[0] === 'contact') {
       title = 'Contact — CLVCH · Hours, Location & Enquiries';
       description = "Contact CLVCH — hours, address, phone and enquiries for events and private hire.";
+    } else if (segs[0] === 'newsletter') {
+      title = 'Newsletter — CLVCH · VIP Updates & Exclusive Offers';
+      description = "Join the CLVCH VIP list for first access to events, exclusive deals, and insider updates from our sports bar and nightlife venues.";
+      canonicalPath = "/newsletter";
     } else if (segs[0] === 'thank-you') {
       title = "CLVCH — You're In";
       indexable = false;
