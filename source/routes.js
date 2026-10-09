@@ -758,76 +758,76 @@ function renderNewsletter() {
   }
 </style>
 
-<script>
-  (function() {
-    const form = document.getElementById('newsletterForm');
-    if (!form) return;
+${renderFooter()}
+  `;
+}
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
+/* ─────── Newsletter Form Binding ─────── */
+function bindNewsletterForm() {
+  const form = document.getElementById('newsletterForm');
+  if (!form) return;
 
-      const emailInput = form.querySelector('#newsletterEmail');
-      const phoneInput = form.querySelector('#newsletterPhone');
-      const emailVal = emailInput.value.trim();
-      const phoneVal = phoneInput.value.trim();
-      const btn = form.querySelector('#newsletterBtn');
-      const errEl = form.querySelector('.newsletter-error');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-      // Validate email
-      if (!emailVal || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(emailVal)) {
-        errEl.textContent = 'Please enter a valid email address.';
+    const emailInput = form.querySelector('#newsletterEmail');
+    const phoneInput = form.querySelector('#newsletterPhone');
+    const emailVal = emailInput.value.trim();
+    const phoneVal = phoneInput.value.trim();
+    const btn = form.querySelector('#newsletterBtn');
+    const errEl = form.querySelector('.newsletter-error');
+
+    // Validate email
+    if (!emailVal || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+      errEl.textContent = 'Please enter a valid email address.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    // Validate phone if provided
+    if (phoneVal) {
+      const phoneClean = phoneVal.replace(/[^0-9]/g, '');
+      if (phoneClean.length < 10) {
+        errEl.textContent = 'Enter a valid phone number.';
         errEl.style.display = 'block';
         return;
       }
+    }
 
-      // Validate phone if provided
-      if (phoneVal) {
-        const phoneClean = phoneVal.replace(/[^0-9]/g, '');
-        if (phoneClean.length < 10) {
-          errEl.textContent = 'Enter a valid phone number.';
-          errEl.style.display = 'block';
-          return;
-        }
-      }
+    errEl.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Joining...';
 
-      errEl.style.display = 'none';
-      btn.disabled = true;
-      btn.textContent = 'Joining...';
+    const payload = { email: emailVal, source: 'newsletter' };
+    if (phoneVal) payload.phone = phoneVal;
 
-      const payload = { email: emailVal, source: 'newsletter' };
-      if (phoneVal) payload.phone = phoneVal;
+    try {
+      const res = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
 
-      try {
-        const res = await fetch('/api/subscribe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
-        const data = await res.json().catch(() => ({}));
-
-        if (res.ok && data.success) {
-          try {
-            localStorage.setItem('clvch_email', emailVal);
-            localStorage.setItem('clvch_newsletter_joined', 'true');
-          } catch {}
-          window.location.href = '/thank-you';
-        } else {
-          btn.disabled = false;
-          btn.textContent = 'Join';
-          errEl.textContent = data.message || "Couldn't add you. Try again?";
-          errEl.style.display = 'block';
-        }
-      } catch (err) {
+      if (res.ok && data.success) {
+        try {
+          localStorage.setItem('clvch_email', emailVal);
+          localStorage.setItem('clvch_newsletter_joined', 'true');
+        } catch {}
+        window.location.href = '/thank-you';
+      } else {
         btn.disabled = false;
         btn.textContent = 'Join';
-        errEl.textContent = "Couldn't add you. Try again?";
+        errEl.textContent = data.message || "Couldn't add you. Try again?";
         errEl.style.display = 'block';
       }
-    });
-  })();
-</script>
-${renderFooter()}
-  `;
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = 'Join';
+      errEl.textContent = "Couldn't add you. Try again?";
+      errEl.style.display = 'block';
+    }
+  });
 }
 
 /* ─────── CONTACT ─────── */
@@ -2230,6 +2230,9 @@ function route() {
   else html = renderHome();
 
   outlet.innerHTML = html;
+
+  // Bind event handlers for pages that use them (inline <script> never executes in innerHTML)
+  if (segs[0] === "newsletter") bindNewsletterForm();
 
   // VIP list popup: skip on pages where the visitor has just joined
   if (segs[0] === "thank-you" || segs[0] === "confirmed") window.CLVCH.cityGate?.cancelSchedule();
