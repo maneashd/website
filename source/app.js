@@ -146,8 +146,8 @@ const HOME_SEED = {
     events:    "info@clvchusa.com",
     press:     "info@clvchusa.com",
     franchise: "info@clvchusa.com",
-    instagram: "clvch.usa",
-    facebook:  "clvchusa",
+    instagram: "clvch_atlanta",
+    facebook:  "clvchatlanta",
   },
 };
 
@@ -834,8 +834,8 @@ window.CLVCH.saveMenu = () => {
 (function navSocials() {
   function update() {
     const contact = (window.CLVCH && window.CLVCH.home && window.CLVCH.home.contact) || {};
-    const ig = contact.instagram || "clvch.usa";
-    const fb = contact.facebook  || "clvchusa";
+    const ig = contact.instagram || "clvch_atlanta";
+    const fb = contact.facebook  || "clvchatlanta";
     document.querySelectorAll(".nav-social--ig").forEach(el => { el.href = "https://instagram.com/" + ig; });
     document.querySelectorAll(".nav-social--fb").forEach(el => { el.href = "https://facebook.com/" + fb; });
   }
