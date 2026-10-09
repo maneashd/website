@@ -578,6 +578,27 @@ function renderNewsletter() {
           "
         >
       </div>
+      <div class="form-group" style="position:relative;margin-top:12px;">
+        <input
+          type="tel"
+          id="newsletterPhone"
+          class="newsletter-input"
+          placeholder="Phone (optional)"
+          autocomplete="tel"
+          style="
+            width:100%;
+            padding:16px 18px;
+            background:var(--ink-3);
+            border:1px solid var(--line);
+            color:var(--bone);
+            font-size:14px;
+            font-family:inherit;
+            letter-spacing:0.01em;
+            box-sizing:border-box;
+            transition:border-color 0.2s;
+          "
+        >
+      </div>
       <button
         type="submit"
         id="newsletterBtn"
@@ -746,7 +767,9 @@ function renderNewsletter() {
       e.preventDefault();
 
       const emailInput = form.querySelector('#newsletterEmail');
+      const phoneInput = form.querySelector('#newsletterPhone');
       const emailVal = emailInput.value.trim();
+      const phoneVal = phoneInput.value.trim();
       const btn = form.querySelector('#newsletterBtn');
       const errEl = form.querySelector('.newsletter-error');
 
@@ -757,15 +780,28 @@ function renderNewsletter() {
         return;
       }
 
+      // Validate phone if provided
+      if (phoneVal) {
+        const phoneClean = phoneVal.replace(/[^0-9]/g, '');
+        if (phoneClean.length < 10) {
+          errEl.textContent = 'Enter a valid phone number.';
+          errEl.style.display = 'block';
+          return;
+        }
+      }
+
       errEl.style.display = 'none';
       btn.disabled = true;
       btn.textContent = 'Joining...';
+
+      const payload = { email: emailVal, source: 'newsletter' };
+      if (phoneVal) payload.phone = phoneVal;
 
       try {
         const res = await fetch('/api/subscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: emailVal, source: 'newsletter' }),
+          body: JSON.stringify(payload),
         });
         const data = await res.json().catch(() => ({}));
 
