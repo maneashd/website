@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /thank-you
+Disallow: /confirmed
+
+Sitemap: https://www.clvchusa.com/sitemap.xml

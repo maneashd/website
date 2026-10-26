@@ -275,7 +275,7 @@ function renderHome() {
                 <div><dt>Opened</dt><dd>${l.opened}</dd></div>
               </dl>
               <div class="actions">
-                <a href="#/locations/${l.id}" data-link>Step Inside →</a>
+                <a href="/locations/${l.id}" data-link>Step Inside →</a>
               </div>
             </div>
           </div>
@@ -313,7 +313,7 @@ function renderLocations() {
     <!-- GRID -->
     <div class="loc-grid" id="locGridView">
       ${L.map((l, i) => `
-        <a href="#/locations/${l.id}" data-link class="loc-card">
+        <a href="/locations/${l.id}" data-link class="loc-card">
           <div class="cover"><img src="${l.hero}" alt=""></div>
           <div class="loc-card-tonight">
             <small>Tonight</small>
@@ -353,8 +353,8 @@ function renderVenue(id) {
   </div>
   <div class="venue-hero-inner">
     <div class="venue-crumbs">
-      <a href="#/" data-link>CLVCH</a> /
-      <a href="#/locations" data-link>Locations</a> /
+      <a href="/" data-link>CLVCH</a> /
+      <a href="/locations" data-link>Locations</a> /
       <b>${l.city}</b>
     </div>
     <div class="venue-hero-title">
@@ -408,7 +408,7 @@ ${renderGameday(l.id)}
         <div class="pillar-num">01 / Kitchen</div>
         <h3>Bites<em> ·</em></h3>
         <p>Chef-driven modern American. Menu rotates seasonally; the wood-fire never stops.</p>
-        <div class="pillar-list"><b>View</b> &nbsp;·&nbsp; <a href="#/menu" data-link style="color:var(--gold);">Full menu →</a></div>
+        <div class="pillar-list"><b>View</b> &nbsp;·&nbsp; <a href="/menu?city=${encodeURIComponent(l.id)}" data-link style="color:var(--gold);">Full menu →</a></div>
       </div>
     </div>
     <div class="pillar pillar--img-right">
@@ -440,7 +440,7 @@ ${renderGameday(l.id)}
       <h2>Table for<br><em>tonight?</em></h2>
       <p class="sub">${l.status === 'open' ? 'Reservations available — book your table online.' : l.status === 'prep' ? 'Reservations open from 4 PM today.' : 'Founding reservations open. Priority to members and wait-list.'}</p>
     </div>
-    <a href="#/reserve?city=${l.id}" class="bigcta" data-link data-cta="reserve">
+    <a href="/reserve?city=${l.id}" class="bigcta" data-link data-cta="reserve">
       <div>
         <div class="t">Reserve</div>
         <div class="s">→ ${l.city}</div>
@@ -468,8 +468,8 @@ ${renderGameday(l.id)}
       </div>` : ''}
       <div>
         <h4>Reservations</h4>
-        <a href="#/reserve?city=${l.id}" data-link class="venue-contact-link">Reserve a table →</a>
-        <br><a href="#/contact" data-link class="venue-contact-link" style="margin-top:8px;display:inline-block;opacity:0.55;font-size:12px;">All locations →</a>
+        <a href="/reserve?city=${l.id}" data-link class="venue-contact-link">Reserve a table →</a>
+        <br><a href="/contact" data-link class="venue-contact-link" style="margin-top:8px;display:inline-block;opacity:0.55;font-size:12px;">All locations →</a>
       </div>
     </div>
   </div>
@@ -481,7 +481,7 @@ ${renderFooter()}
 /* ─────── RESERVE ─────── */
 function renderReserve() {
   const L = publicLocations();
-  const params = new URLSearchParams(location.hash.split("?")[1] || "");
+  const params = new URLSearchParams(location.search);
   const cityId = params.get("city");
   const city = L.find(l => l.id === cityId) || L[0];
 
@@ -536,6 +536,288 @@ ${renderFooter()}
   `;
 }
 
+/* ─────── NEWSLETTER ─────── */
+function renderNewsletter() {
+  return `
+<section class="newsletter-page">
+  <div class="newsletter-container">
+    <div class="newsletter-header">
+      <h1 class="newsletter-title">
+        <img src="/assets/CLVCH-header-logo.png" alt="CLVCH — Bites · Beats · Booze" class="newsletter-logo-img" />
+      </h1>
+      <p class="newsletter-subtitle">VIP Updates & Exclusive Offers</p>
+    </div>
+
+    <div class="newsletter-copy">
+      <p class="newsletter-lede">Get first access to events, exclusive deals, and insider updates from CLVCH.</p>
+    </div>
+
+    <form id="newsletterForm" class="newsletter-form" style="max-width:480px;margin:0 auto;">
+      <div class="form-group" style="position:relative;">
+        <input
+          type="email"
+          id="newsletterEmail"
+          class="newsletter-input"
+          placeholder="Enter your email"
+          required
+          autocomplete="email"
+          style="
+            width:100%;
+            padding:16px 18px;
+            background:var(--ink-3);
+            border:1px solid var(--line);
+            color:var(--bone);
+            font-size:14px;
+            font-family:inherit;
+            letter-spacing:0.01em;
+            box-sizing:border-box;
+            transition:border-color 0.2s;
+          "
+        >
+      </div>
+      <div class="form-group" style="position:relative;margin-top:12px;">
+        <input
+          type="tel"
+          id="newsletterPhone"
+          class="newsletter-input"
+          placeholder="Phone (optional)"
+          autocomplete="tel"
+          style="
+            width:100%;
+            padding:16px 18px;
+            background:var(--ink-3);
+            border:1px solid var(--line);
+            color:var(--bone);
+            font-size:14px;
+            font-family:inherit;
+            letter-spacing:0.01em;
+            box-sizing:border-box;
+            transition:border-color 0.2s;
+          "
+        >
+      </div>
+      <button
+        type="submit"
+        id="newsletterBtn"
+        class="newsletter-btn"
+        style="
+          width:100%;
+          margin-top:16px;
+          padding:14px 18px;
+          background:var(--bone);
+          color:var(--ink);
+          border:none;
+          font-family:var(--display);
+          font-size:13px;
+          letter-spacing:0.08em;
+          text-transform:uppercase;
+          font-weight:600;
+          cursor:pointer;
+          transition:background-color 0.2s, color 0.2s;
+        "
+      >
+        Join
+      </button>
+      <p class="newsletter-error" style="
+        color:#ff8b7e;
+        font-family:var(--mono);
+        font-size:10px;
+        letter-spacing:0.12em;
+        margin-top:12px;
+        text-transform:uppercase;
+        display:none;
+      "></p>
+    </form>
+
+    <p class="newsletter-privacy" style="
+      margin-top:32px;
+      text-align:center;
+      color:var(--bone-muted);
+      font-size:11px;
+      letter-spacing:0.08em;
+      text-transform:uppercase;
+      max-width:480px;
+      margin-left:auto;
+      margin-right:auto;
+    ">
+      We respect your privacy. Unsubscribe any time.
+    </p>
+  </div>
+</section>
+
+<style>
+  .newsletter-page {
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--ink);
+    padding:40px 20px;
+  }
+
+  .newsletter-container {
+    width:100%;
+    max-width:600px;
+  }
+
+  .newsletter-header {
+    text-align:center;
+    margin-bottom:40px;
+  }
+
+  .newsletter-title {
+    margin:0;
+    margin-bottom:20px;
+  }
+
+  .newsletter-logo-img {
+    display:block;
+    margin:0 auto;
+    width:clamp(160px, 40vw, 260px);
+    height:auto;
+    max-width:100%;
+  }
+
+  .newsletter-subtitle {
+    margin:0;
+    color:var(--bone-muted);
+    font-size:12px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+  }
+
+  .newsletter-copy {
+    text-align:center;
+    margin-bottom:36px;
+  }
+
+  .newsletter-lede {
+    margin:0;
+    color:var(--bone-dim);
+    font-size:16px;
+    line-height:1.6;
+    max-width:400px;
+    margin-left:auto;
+    margin-right:auto;
+  }
+
+  .newsletter-form {
+    margin:0;
+  }
+
+  .newsletter-input:focus {
+    outline:none;
+    border-color:var(--bone);
+  }
+
+  .newsletter-btn:hover:not(:disabled) {
+    background:var(--bone-dim);
+  }
+
+  .newsletter-btn:active:not(:disabled) {
+    background:var(--bone);
+  }
+
+  .newsletter-btn:disabled {
+    opacity:0.5;
+    cursor:not-allowed;
+  }
+
+  @media (max-width: 600px) {
+    .newsletter-page {
+      padding:20px 16px;
+    }
+
+    .newsletter-header {
+      margin-bottom:32px;
+    }
+
+    .newsletter-logo-img {
+      width:clamp(140px, 35vw, 180px);
+    }
+
+    .newsletter-copy {
+      margin-bottom:28px;
+    }
+
+    .newsletter-lede {
+      font-size:15px;
+    }
+  }
+</style>
+
+${renderFooter()}
+  `;
+}
+
+/* ─────── Newsletter Form Binding ─────── */
+function bindNewsletterForm() {
+  const form = document.getElementById('newsletterForm');
+  if (!form) return;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const emailInput = form.querySelector('#newsletterEmail');
+    const phoneInput = form.querySelector('#newsletterPhone');
+    const emailVal = emailInput.value.trim();
+    const phoneVal = phoneInput.value.trim();
+    const btn = form.querySelector('#newsletterBtn');
+    const errEl = form.querySelector('.newsletter-error');
+
+    // Validate email
+    if (!emailVal || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+      errEl.textContent = 'Please enter a valid email address.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    // Validate phone if provided
+    if (phoneVal) {
+      const phoneClean = phoneVal.replace(/[^0-9]/g, '');
+      if (phoneClean.length < 10) {
+        errEl.textContent = 'Enter a valid phone number.';
+        errEl.style.display = 'block';
+        return;
+      }
+    }
+
+    errEl.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Joining...';
+
+    const payload = { email: emailVal, source: 'newsletter' };
+    if (phoneVal) payload.phone = phoneVal;
+
+    try {
+      const res = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.success) {
+        try {
+          localStorage.setItem('clvch_email', emailVal);
+          localStorage.setItem('clvch_newsletter_joined', 'true');
+        } catch {}
+        window.location.href = '/thank-you';
+      } else {
+        btn.disabled = false;
+        btn.textContent = 'Join';
+        errEl.textContent = data.message || "Couldn't add you. Try again?";
+        errEl.style.display = 'block';
+      }
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = 'Join';
+      errEl.textContent = "Couldn't add you. Try again?";
+      errEl.style.display = 'block';
+    }
+  });
+}
+
 /* ─────── CONTACT ─────── */
 function renderContact() {
   const L = publicLocations();
@@ -568,7 +850,7 @@ function renderContact() {
             ${l.tonight ? `<div><dt>Tonight</dt><dd>${h(l.tonight)}</dd></div>` : ''}
           </dl>
           <div class="actions" style="margin-top:28px;">
-            <a href="#/locations/${l.id}" data-link>Step Inside →</a>
+            <a href="/locations/${l.id}" data-link>Step Inside →</a>
           </div>
         </div>
       </div>
@@ -618,7 +900,12 @@ function renderMenuItems(items) {
 }
 
 function renderMenu() {
-  const M = window.CLVCH.menu;
+  // Per-city menus come from Sanity (window.CLVCH.menuByCity); /menu?city=<id> picks one.
+  const byCity = window.CLVCH.menuByCity || {};
+  const menuCities = publicLocations().filter(l => byCity[l.id]);
+  const wanted = new URLSearchParams(location.search).get("city");
+  const city = menuCities.find(l => l.id === wanted) || menuCities[0] || null;
+  const M = city ? byCity[city.id] : window.CLVCH.menu;
   const menuPdf = window.CLVCH.home.menuPdf || "";
   return `
 <section class="menu-page">
@@ -637,6 +924,11 @@ function renderMenu() {
     </a>` : ''}
   </div>
 
+  ${menuCities.length > 1 ? `
+  <div class="menu-tab-row menu-city-row">
+    ${menuCities.map(l => `<a href="/menu?city=${encodeURIComponent(l.id)}" data-link class="menu-tab-btn${l === city ? ' on' : ''}">${h(l.city)}</a>`).join('')}
+  </div>` : ''}
+
   <div class="menu-tab-row">
     <button class="menu-tab-btn on" data-menu-tab="coffee">Coffee</button>
     <button class="menu-tab-btn" data-menu-tab="brunch">Brunch</button>
@@ -645,9 +937,9 @@ function renderMenu() {
   </div>
 
   <div data-menu-panel="coffee" class="menu-panel">
-    ${(window.CLVCH.menu.coffee && window.CLVCH.menu.coffee.length) ? `
+    ${(M.coffee && M.coffee.length) ? `
       <div class="menu-panel-sub">Specialty coffee · All day</div>
-      <div class="menu-items">${renderMenuItems(window.CLVCH.menu.coffee)}</div>
+      <div class="menu-items">${renderMenuItems(M.coffee)}</div>
     ` : `
       <div class="menu-coming-soon">
         <div class="menu-coming-soon-inner">
@@ -692,8 +984,8 @@ function renderThankYou() {
       <h1>Check your<br><em>email.</em></h1>
       <p class="sub" style="margin-top:24px;max-width:480px;font-size:16px;line-height:1.7;color:var(--bone-dim);">We sent you a confirmation link. Click it to lock in your spot on the CLVCH list — first access to new openings, residencies, and gameday tables.</p>
       <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:40px;">
-        <a href="#/" data-link class="cta" style="display:inline-block;padding:16px 32px;font-size:13px;">Back to home →</a>
-        <a href="https://instagram.com/clvch.usa" class="nav-social--ig" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:10px;padding:16px 24px;border:1px solid var(--line);font-family:var(--mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--bone-muted);transition:color 220ms;">Follow us on Instagram</a>
+        <a href="/" data-link class="cta" style="display:inline-block;padding:16px 32px;font-size:13px;">Back to home →</a>
+        <a href="https://www.instagram.com/clvch_atlanta" class="nav-social--ig" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:10px;padding:16px 24px;border:1px solid var(--line);font-family:var(--mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--bone-muted);transition:color 220ms;">Follow us on Instagram</a>
       </div>
     </div>
   </div>
@@ -708,8 +1000,8 @@ function renderConfirmed() {
   <div class="eyebrow" style="margin-bottom:16px;color:var(--bone-muted);">FOLLOW THE FLOOR.</div>
   <p style="font-family:var(--editorial);font-size:17px;color:var(--bone-dim);line-height:1.5;font-weight:300;margin-bottom:24px;">Follow CLVCH for first looks.</p>
   <div style="display:flex;gap:16px;flex-wrap:wrap;">
-    <a href="https://instagram.com/clvch.usa" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;padding:16px 24px;border:1px solid var(--line);font-family:var(--mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--bone-muted);transition:color 220ms;">Follow on Instagram</a>
-    <a href="https://facebook.com/clvchusa" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;padding:16px 24px;border:1px solid var(--line);font-family:var(--mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--bone-muted);transition:color 220ms;">Follow on Facebook</a>
+    <a href="https://www.instagram.com/clvch_atlanta" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;padding:16px 24px;border:1px solid var(--line);font-family:var(--mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--bone-muted);transition:color 220ms;">Follow on Instagram</a>
+    <a href="https://www.facebook.com/clvchatlanta" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;padding:16px 24px;border:1px solid var(--line);font-family:var(--mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--bone-muted);transition:color 220ms;">Follow on Facebook</a>
   </div>
 </div>`;
 
@@ -721,8 +1013,8 @@ function renderConfirmed() {
       <h1>You're<br><em>confirmed.</em></h1>
       <p class="sub" style="margin-top:24px;max-width:480px;font-size:16px;line-height:1.7;color:var(--bone-dim);">Welcome to the CLVCH list. You'll hear from us first — new cities, exclusive tables, and nights worth showing up for.</p>
       <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:40px;">
-        <a href="#/reserve" data-link class="cta" style="display:inline-block;padding:16px 32px;font-size:13px;">Reserve a table →</a>
-        <a href="#/" data-link style="display:inline-flex;align-items:center;padding:16px 24px;border:1px solid var(--line);font-family:var(--mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--bone-muted);transition:color 220ms;">Back to home</a>
+        <a href="/reserve" data-link class="cta" style="display:inline-block;padding:16px 32px;font-size:13px;">Reserve a table →</a>
+        <a href="/" data-link style="display:inline-flex;align-items:center;padding:16px 24px;border:1px solid var(--line);font-family:var(--mono);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--bone-muted);transition:color 220ms;">Back to home</a>
       </div>
       ${socialSection}
     </div>
@@ -797,7 +1089,7 @@ function renderTerms() {
   </div>
   <div class="static-page-body">
     <h2>Acceptance of terms</h2>
-    <p>By accessing or using the CLVCH website (clvchusa.com) or any CLVCH venue, you agree to these Terms of Service and our <a href="#/privacy" data-link>Privacy Policy</a>. If you do not agree, please do not use our services.</p>
+    <p>By accessing or using the CLVCH website (clvchusa.com) or any CLVCH venue, you agree to these Terms of Service and our <a href="/privacy" data-link>Privacy Policy</a>. If you do not agree, please do not use our services.</p>
 
     <h2>Age requirement and alcohol notice</h2>
     <p><strong>You must be 21 years of age or older to access this website and to enter any CLVCH venue.</strong> CLVCH holds active liquor licenses and serves alcohol at all locations. By accessing this site, you confirm you are of legal drinking age in your jurisdiction. We reserve the right to ask for valid photo ID at any time and to refuse service to anyone who cannot provide valid proof of age.</p>
@@ -846,7 +1138,7 @@ function renderStories() {
     ? `<p class="mono" style="font-size:11px;letter-spacing:0.22em;color:var(--bone-muted);text-transform:uppercase;padding:80px 0;">No stories yet — check back soon.</p>`
     : `<div class="stories-grid">
         ${articles.map(a => `
-          <a class="story-card" href="#/stories/${a.id}" data-link>
+          <a class="story-card" href="/stories/${a.id}" data-link>
             <div class="story-card-cover">
               ${a.cover
                 ? `<img src="${a.cover}" alt="${h(a.title)}" loading="lazy">`
@@ -869,7 +1161,7 @@ ${renderFooter()}
 
 function renderStory(slug) {
   const article = (window.CLVCH.articles || []).find(a => a.id === slug && a.published);
-  const back = `<a href="#/stories" data-link class="mono" style="font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--bone-muted);">← Stories</a>`;
+  const back = `<a href="/stories" data-link class="mono" style="font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--bone-muted);">← Stories</a>`;
 
   if (!article) {
     return `
@@ -910,28 +1202,28 @@ function renderFooter() {
     <div class="foot-col">
       <h5>Cities</h5>
       <ul>
-        ${publicLocations().map(l => `<li><a href="#/locations/${l.id}" data-link>${l.city}${l.status === 'soon' ? ` (${l.opened})` : ''}</a></li>`).join('')}
+        ${publicLocations().map(l => `<li><a href="/locations/${l.id}" data-link>${l.city}${l.status === 'soon' ? ` (${l.opened})` : ''}</a></li>`).join('')}
       </ul>
     </div>
     <div class="foot-col">
       <h5>The House</h5>
       <ul>
-        <li><a href="#/" data-link>Experience</a></li>
-        <li><a href="#/menu" data-link>Menu</a></li>
-        <li><a href="#/stories" data-link>Stories</a></li>
+        <li><a href="/" data-link>Experience</a></li>
+        <li><a href="/menu" data-link>Menu</a></li>
+        <li><a href="/stories" data-link>Stories</a></li>
       </ul>
     </div>
     <div class="foot-col">
       <h5>Contact</h5>
       <ul>
-        <li><a href="#/contact" data-link>All locations</a></li>
+        <li><a href="/contact" data-link>All locations</a></li>
         <li><a href="mailto:info@clvchusa.com">info@clvchusa.com</a></li>
         <li><a href="mailto:info@clvchusa.com">Private Events</a></li>
       </ul>
     </div>
   </div>
   <div class="foot-base">
-    <span>© 2026 CLVCH Hospitality Group · <a href="#/privacy" data-link style="color:inherit;">Privacy</a> · <a href="#/terms" data-link style="color:inherit;">Terms</a></span>
+    <span>© 2026 CLVCH Hospitality Group · <a href="/privacy" data-link style="color:inherit;">Privacy</a> · <a href="/terms" data-link style="color:inherit;">Terms</a></span>
     <span>${publicLocations().map(l => l.city).join(' · ')}</span>
     <span>Bites · Beats · Booze</span>
   </div>
@@ -953,7 +1245,7 @@ function renderAdminStories(slug) {
     <h1>Super only<em>.</em></h1>
     <p class="admin-gate-lede">Stories editing is reserved for super admins.</p>
     <div style="display:flex;gap:12px;margin-top:32px;flex-wrap:wrap;">
-      <a class="admin-btn admin-btn--primary" href="#/admin" data-link>← Admin home</a>
+      <a class="admin-btn admin-btn--primary" href="/admin" data-link>← Admin home</a>
       <button class="admin-btn admin-btn--ghost" data-admin-signout>Sign out</button>
     </div>
   </div>
@@ -970,15 +1262,15 @@ function renderAdminStories(slug) {
 
   const tabs = `
   <div class="admin-tabs">
-    <a href="#/admin" data-link>Admin home</a>
-    <a href="#/admin/home" data-link>Home page</a>
-    <a href="#/admin/stories" data-link class="${!isEditor ? 'on' : ''}">Stories</a>
-    <a href="#/admin/menu" data-link>Menu</a>
-    ${L.map(l => `<a href="#/admin/${l.id}" data-link>${h(l.city)}</a>`).join('')}
+    <a href="/admin" data-link>Admin home</a>
+    <a href="/admin/home" data-link>Home page</a>
+    <a href="/admin/stories" data-link class="${!isEditor ? 'on' : ''}">Stories</a>
+    <a href="/admin/menu" data-link>Menu</a>
+    ${L.map(l => `<a href="/admin/${l.id}" data-link>${h(l.city)}</a>`).join('')}
   </div>`;
 
   const editorHtml = (!isNew && !article) ? `
-    <p style="color:var(--bone-muted);padding:40px 0;">Article not found. <a href="#/admin/stories" data-link style="color:var(--bone);">← Back to Stories</a></p>
+    <p style="color:var(--bone-muted);padding:40px 0;">Article not found. <a href="/admin/stories" data-link style="color:var(--bone);">← Back to Stories</a></p>
   ` : `
     <form class="admin-content" data-article-form>
       <div class="admin-form-grid admin-form-grid--2" style="margin-bottom:24px;">
@@ -1032,7 +1324,7 @@ function renderAdminStories(slug) {
       <div class="admin-form-foot" style="margin-top:28px;">
         <div class="admin-form-foot-msg" data-form-msg></div>
         <div class="admin-form-foot-actions">
-          <a href="#/admin/stories" data-link class="admin-btn admin-btn--ghost">Cancel</a>
+          <a href="/admin/stories" data-link class="admin-btn admin-btn--ghost">Cancel</a>
           <button type="submit" class="admin-btn admin-btn--primary">Save article</button>
         </div>
       </div>
@@ -1074,7 +1366,7 @@ function renderAdminStories(slug) {
 <section class="admin" data-stories-admin="">
   <div class="admin-head">
     <div>
-      <a href="#/admin" data-link class="admin-rolebar-link" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;font-size:12px;">← Admin home</a>
+      <a href="/admin" data-link class="admin-rolebar-link" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;font-size:12px;">← Admin home</a>
       <div class="eyebrow" style="margin-bottom:12px;">Brand · Stories</div>
       <h1>${isEditor ? (isNew ? 'New story<em>.</em>' : 'Edit<em>.</em>') : 'Stories<em>.</em>'}</h1>
       <p style="color:var(--bone-muted);max-width:60ch;font-family:var(--body);font-size:14px;line-height:1.55;">
@@ -1088,7 +1380,7 @@ function renderAdminStories(slug) {
         <span class="admin-rolechip-dot"></span>
         <div><small>Signed in as</small><b>Super admin</b></div>
       </div>
-      <a href="#/" data-link class="admin-rolebar-link">← View site</a>
+      <a href="/" data-link class="admin-rolebar-link">← View site</a>
       <button class="admin-rolebar-link admin-rolebar-link--danger" data-admin-signout>Sign out</button>
     </div>
   </div>
@@ -1114,7 +1406,7 @@ function renderAdminMenu() {
     <h1>Super only<em>.</em></h1>
     <p class="admin-gate-lede">Menu editing is reserved for super admins.</p>
     <div style="display:flex;gap:12px;margin-top:32px;flex-wrap:wrap;">
-      <a class="admin-btn admin-btn--primary" href="#/admin" data-link>← Admin home</a>
+      <a class="admin-btn admin-btn--primary" href="/admin" data-link>← Admin home</a>
       <button class="admin-btn admin-btn--ghost" data-admin-signout>Sign out</button>
     </div>
   </div>
@@ -1127,11 +1419,11 @@ function renderAdminMenu() {
 
   const tabs = `
   <div class="admin-tabs">
-    <a href="#/admin" data-link>Admin home</a>
-    <a href="#/admin/home" data-link>Home page</a>
-    <a href="#/admin/stories" data-link>Stories</a>
-    <a href="#/admin/menu" data-link class="on">Menu</a>
-    ${L.map(l => `<a href="#/admin/${l.id}" data-link>${h(l.city)}</a>`).join('')}
+    <a href="/admin" data-link>Admin home</a>
+    <a href="/admin/home" data-link>Home page</a>
+    <a href="/admin/stories" data-link>Stories</a>
+    <a href="/admin/menu" data-link class="on">Menu</a>
+    ${L.map(l => `<a href="/admin/${l.id}" data-link>${h(l.city)}</a>`).join('')}
   </div>`;
 
   const mkItemRow = (item, i) => `
@@ -1165,7 +1457,7 @@ function renderAdminMenu() {
 <section class="admin" data-menu-admin="">
   <div class="admin-head">
     <div>
-      <a href="#/admin" data-link class="admin-rolebar-link" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;font-size:12px;">← Admin home</a>
+      <a href="/admin" data-link class="admin-rolebar-link" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;font-size:12px;">← Admin home</a>
       <div class="eyebrow" style="margin-bottom:12px;">Brand · Menu</div>
       <h1>Edit the <em>Menu.</em></h1>
       <p style="color:var(--bone-muted);max-width:60ch;font-family:var(--body);font-size:14px;line-height:1.55;">Edit items, prices, and tags. Changes go live the moment you save.</p>
@@ -1175,7 +1467,7 @@ function renderAdminMenu() {
         <span class="admin-rolechip-dot"></span>
         <div><small>Signed in as</small><b>Super admin</b></div>
       </div>
-      <a href="#/" data-link class="admin-rolebar-link">← View site</a>
+      <a href="/" data-link class="admin-rolebar-link">← View site</a>
       <button class="admin-rolebar-link admin-rolebar-link--danger" data-admin-signout>Sign out</button>
     </div>
   </div>
@@ -1246,7 +1538,7 @@ function renderAdminGate(scopeCityId) {
       `).join("")}
     </div>
 
-    <a href="#/" data-link class="admin-gate-back">← Back to clvchusa.com</a>
+    <a href="/" data-link class="admin-gate-back">← Back to clvchusa.com</a>
   </div>
 </section>
   `;
@@ -1679,7 +1971,7 @@ function renderAdminHomeBlock() {
     <div class="admin-form-foot-msg" data-form-msg></div>
     <div class="admin-form-foot-actions">
       <button type="button" class="admin-btn admin-btn--ghost" data-home-reset>Reset home to default</button>
-      <a href="#/" data-link class="admin-btn admin-btn--ghost">Preview home →</a>
+      <a href="/" data-link class="admin-btn admin-btn--ghost">Preview home →</a>
       <button type="submit" class="admin-btn admin-btn--primary">Save changes</button>
     </div>
   </div>
@@ -1709,7 +2001,7 @@ function renderAdmin(scopeCityId) {
     <h1>Wrong <em>door.</em></h1>
     <p class="admin-gate-lede">You're a manager for a different city. Head back and select your location.</p>
     <div style="display:flex;gap:12px;margin-top:32px;flex-wrap:wrap;">
-      <a class="admin-btn admin-btn--primary" href="#/admin" data-link>← Admin home</a>
+      <a class="admin-btn admin-btn--primary" href="/admin" data-link>← Admin home</a>
       <button class="admin-btn admin-btn--ghost" data-admin-signout>Sign out</button>
     </div>
   </div>
@@ -1725,7 +2017,7 @@ function renderAdmin(scopeCityId) {
     <h1>Super only<em>.</em></h1>
     <p class="admin-gate-lede">Home page editing is reserved for super admins. Head back to your city dashboard.</p>
     <div style="display:flex;gap:12px;margin-top:32px;flex-wrap:wrap;">
-      <a class="admin-btn admin-btn--primary" href="#/admin" data-link>← Admin home</a>
+      <a class="admin-btn admin-btn--primary" href="/admin" data-link>← Admin home</a>
       <button class="admin-btn admin-btn--ghost" data-admin-signout>Sign out</button>
     </div>
   </div>
@@ -1733,7 +2025,7 @@ function renderAdmin(scopeCityId) {
   }
 
   if (isScoped && cities.length === 0) {
-    return `<div class="admin"><h1>Unknown city.</h1><a href="#/admin" data-link style="color:var(--bone);">← Admin home</a></div>`;
+    return `<div class="admin"><h1>Unknown city.</h1><a href="/admin" data-link style="color:var(--bone);">← Admin home</a></div>`;
   }
 
   const roleLabel = isSuper ? "Super admin" : (() => {
@@ -1749,7 +2041,7 @@ function renderAdmin(scopeCityId) {
 <section class="admin" data-admin-scope="${scopeCityId || 'all'}">
   <div class="admin-head">
     <div>
-      ${isScoped || isHome ? `<a href="#/admin" data-link class="admin-rolebar-link" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;font-size:12px;">← Admin home</a>` : ''}
+      ${isScoped || isHome ? `<a href="/admin" data-link class="admin-rolebar-link" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:20px;font-size:12px;">← Admin home</a>` : ''}
       <div class="eyebrow" style="margin-bottom:12px;">${isScoped ? cities[0].city + ' · Dashboard' : isHome ? 'Brand · Home page' : 'House control'}</div>
       <h1>${isScoped ? cities[0].city + '<em>.</em>' : isHome ? 'Home<em>.</em>' : 'The <em>House.</em>'}</h1>
       <p style="color:var(--bone-muted);max-width:60ch;font-family:var(--body);font-size:14px;line-height:1.55;">
@@ -1770,21 +2062,21 @@ function renderAdmin(scopeCityId) {
           <b>${roleLabel}</b>
         </div>
       </div>
-      <a href="#/" data-link class="admin-rolebar-link">← View site</a>
+      <a href="/" data-link class="admin-rolebar-link">← View site</a>
       <button class="admin-rolebar-link admin-rolebar-link--danger" data-admin-signout>Sign out</button>
     </div>
   </div>
 
   ${isScoped || isHome ? `
     <div class="admin-tabs">
-      <a href="#/admin" data-link>Admin home</a>
+      <a href="/admin" data-link>Admin home</a>
       ${isSuper ? `
-        <a href="#/admin/home" data-link class="${isHome ? 'on' : ''}">Home page</a>
-        <a href="#/admin/stories" data-link>Stories</a>
-        <a href="#/admin/menu" data-link>Menu</a>
-        ${L.map(l => `<a href="#/admin/${l.id}" data-link class="${scopeCityId===l.id ? 'on' : ''}">${l.city}${l.disabled?' <small>· off</small>':''}</a>`).join("")}
+        <a href="/admin/home" data-link class="${isHome ? 'on' : ''}">Home page</a>
+        <a href="/admin/stories" data-link>Stories</a>
+        <a href="/admin/menu" data-link>Menu</a>
+        ${L.map(l => `<a href="/admin/${l.id}" data-link class="${scopeCityId===l.id ? 'on' : ''}">${l.city}${l.disabled?' <small>· off</small>':''}</a>`).join("")}
       ` : `
-        <a href="#/admin/${scopeCityId}" data-link class="on">${cities[0].city}</a>
+        <a href="/admin/${scopeCityId}" data-link class="on">${cities[0].city}</a>
       `}
     </div>
   ` : ''}
@@ -1793,17 +2085,17 @@ function renderAdmin(scopeCityId) {
 
     ${isSuper ? `
     <div class="admin-brand-cards">
-      <a href="#/admin/home" data-link style="display:block;text-decoration:none;">
+      <a href="/admin/home" data-link style="display:block;text-decoration:none;">
         <div class="eyebrow" style="margin-bottom:16px;">Brand</div>
         <div style="font-family:var(--display);font-size:40px;letter-spacing:0.02em;line-height:1;">Home page</div>
         <div class="mono" style="font-size:10px;letter-spacing:0.22em;color:var(--bone-muted);text-transform:uppercase;margin-top:12px;">Hero · pillars · reserve strip →</div>
       </a>
-      <a href="#/admin/stories" data-link style="display:block;text-decoration:none;">
+      <a href="/admin/stories" data-link style="display:block;text-decoration:none;">
         <div class="eyebrow" style="margin-bottom:16px;">Brand</div>
         <div style="font-family:var(--display);font-size:40px;letter-spacing:0.02em;line-height:1;">Stories</div>
         <div class="mono" style="font-size:10px;letter-spacing:0.22em;color:var(--bone-muted);text-transform:uppercase;margin-top:12px;">${_artPub} published · ${_artDraft} draft →</div>
       </a>
-      <a href="#/admin/menu" data-link style="display:block;text-decoration:none;">
+      <a href="/admin/menu" data-link style="display:block;text-decoration:none;">
         <div class="eyebrow" style="margin-bottom:16px;">Brand</div>
         <div style="font-family:var(--display);font-size:40px;letter-spacing:0.02em;line-height:1;">Menu</div>
         <div class="mono" style="font-size:10px;letter-spacing:0.22em;color:var(--bone-muted);text-transform:uppercase;margin-top:12px;">${(window.CLVCH.menu.kitchen||[]).length + (window.CLVCH.menu.brunch||[]).length + (window.CLVCH.menu.bar||[]).length} items across 3 sections →</div>
@@ -1834,7 +2126,7 @@ function renderAdmin(scopeCityId) {
           ${l.tonight ? `<div style="color:var(--bone-dim);font-size:13px;margin-top:16px;line-height:1.6;">${l.tonight}<br>${l.tonightTime}</div>` : ''}
         `;
         return accessible
-          ? `<a href="#/admin/${l.id}" data-link style="display:block;text-decoration:none;">${inner}</a>`
+          ? `<a href="/admin/${l.id}" data-link style="display:block;text-decoration:none;">${inner}</a>`
           : `<div style="opacity:0.25;cursor:not-allowed;">${inner}</div>`;
       }).join("")}
     </div>
@@ -1901,7 +2193,7 @@ function renderAdmin(scopeCityId) {
       <div class="admin-cityindex-head" style="border-bottom:1px solid var(--line-soft);margin-bottom:0;">
         <h2>Home page <small>· global</small></h2>
         <div class="admin-cityindex-actions">
-          <a href="#/" data-link class="admin-btn admin-btn--ghost">Preview home →</a>
+          <a href="/" data-link class="admin-btn admin-btn--ghost">Preview home →</a>
         </div>
       </div>
       ${renderAdminHomeBlock()}
@@ -1913,16 +2205,17 @@ function renderAdmin(scopeCityId) {
 
 /* ═══ Router ═══ */
 function route() {
-  window.CLVCH.cityGate?.cancelSchedule();
-  const hash = location.hash.replace(/^#/, "") || "/";
-  const [path] = hash.split("?");
+  let path = location.pathname;
+  if (path.startsWith("/source/")) path = path.slice(7); // strip /source/ if present
+  if (path.endsWith("/index.html")) path = path.slice(0, -"index.html".length);
   const segs = path.split("/").filter(Boolean);
 
   let html = "";
   if (segs.length === 0) html = renderHome();
-  else if (segs[0] === "locations" && segs[1]) { html = renderVenue(segs[1]); window.CLVCH.cityGate?.scheduleFor(segs[1]); }
+  else if (segs[0] === "locations" && segs[1]) html = renderVenue(segs[1]);
   else if (segs[0] === "locations") html = renderLocations();
   else if (segs[0] === "reserve") html = renderReserve();
+  else if (segs[0] === "newsletter") html = renderNewsletter();
   else if (segs[0] === "contact") html = renderContact();
   else if (segs[0] === "menu") html = renderMenu();
   else if (segs[0] === "privacy") html = renderPrivacy();
@@ -1936,40 +2229,107 @@ function route() {
 
   outlet.innerHTML = html;
 
-  // ─── Document title ───
+  // Bind event handlers for pages that use them (inline <script> never executes in innerHTML)
+  if (segs[0] === "newsletter") bindNewsletterForm();
+
+  // VIP list popup: skip on pages where the visitor has just joined
+  if (segs[0] === "thank-you" || segs[0] === "confirmed") window.CLVCH.cityGate?.cancelSchedule();
+  else window.CLVCH.cityGate?.scheduleFor(segs[0] === "locations" && segs[1] ? segs[1] : null);
+
+  // ─── Document title + SEO meta (description, canonical, social, robots) ───
   {
+    const SITE = "https://www.clvchusa.com";
     let title = 'CLVCH — Sports Bar, Restaurant & Nightlife · Bites. Beats. Booze.';
+    let description = "Premium sports bar in Johns Creek, GA. Smash burgers, signature cocktails, live sports on every screen, brunch, and late-night entertainment. Bites. Beats. Booze.";
+    let image = SITE + "/assets/og-image.jpg";
+    let canonicalPath = "/" + segs.join("/");
+    let indexable = true;
+
     if (segs.length === 0) {
-      // home — default above
+      // home — defaults above
     } else if (segs[0] === 'locations' && segs[1]) {
-      const loc = window.CLVCH.locations.find(x => x.id === segs[1]);
+      const loc = window.CLVCH.locations.find(x => x.id === segs[1] && !x.disabled);
       const cityName = loc ? loc.city : segs[1].charAt(0).toUpperCase() + segs[1].slice(1);
       title = segs[1] === 'atlanta'
         ? `CLVCH ${cityName} — Sports Bar · Johns Creek, GA`
         : `CLVCH ${cityName} — Sports Bar`;
+      if (loc) {
+        description = loc.blurb || `CLVCH ${loc.city}${loc.state ? ", " + loc.state : ""} — sports bar, restaurant and nightlife.${loc.address ? " " + loc.address + "." : ""}`;
+        if (loc.hero) image = loc.hero;
+      } else {
+        indexable = false;
+      }
     } else if (segs[0] === 'locations') {
       title = 'Locations — CLVCH';
+      description = "Find a CLVCH near you — sports bar, restaurant and nightlife under one roof. Addresses, hours and what's on tonight.";
     } else if (segs[0] === 'menu') {
       title = 'Menu — CLVCH · Smash Burgers, Cocktails, Brunch';
+      description = "The CLVCH menu — smash burgers, shareable plates, weekend brunch, signature cocktails and craft drinks.";
     } else if (segs[0] === 'stories' && segs[1]) {
       const article = (window.CLVCH.articles || []).find(a => a.id === segs[1] && a.published);
       title = article ? `${article.title} — CLVCH Stories` : 'Stories — CLVCH';
+      if (article) {
+        description = article.excerpt || description;
+        if (article.cover) image = article.cover;
+      } else {
+        indexable = false;
+      }
     } else if (segs[0] === 'stories') {
       title = 'Stories — CLVCH';
+      description = "Stories from CLVCH — game days, nights out, food, drinks and the people behind the house.";
     } else if (segs[0] === 'reserve') {
       title = 'Reserve — CLVCH';
+      description = "Reserve a table at CLVCH for game days, brunch, dinner and late nights.";
+      canonicalPath = "/reserve";
     } else if (segs[0] === 'contact') {
       title = 'Contact — CLVCH · Hours, Location & Enquiries';
+      description = "Contact CLVCH — hours, address, phone and enquiries for events and private hire.";
+    } else if (segs[0] === 'newsletter') {
+      title = 'Newsletter — CLVCH · VIP Updates & Exclusive Offers';
+      description = "Join the CLVCH VIP list for first access to events, exclusive deals, and insider updates from our sports bar and nightlife venues.";
+      canonicalPath = "/newsletter";
     } else if (segs[0] === 'thank-you') {
       title = "CLVCH — You're In";
+      indexable = false;
     } else if (segs[0] === 'confirmed') {
       title = 'CLVCH — Welcome to The List';
+      indexable = false;
     } else if (segs[0] === 'privacy') {
       title = 'Privacy Policy — CLVCH';
+      description = "How CLVCH collects, uses and protects your personal information.";
     } else if (segs[0] === 'terms') {
       title = 'Terms of Service — CLVCH';
+      description = "The terms that apply when you use the CLVCH website or visit a CLVCH venue.";
+    } else {
+      // admin and unknown paths render the homepage — keep them out of the index
+      indexable = false;
+      canonicalPath = "/";
     }
+
+    description = description.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+    if (description.length > 160) description = description.slice(0, 157).replace(/\s+\S*$/, "") + "…";
+    const url = SITE + canonicalPath;
+    image = new URL(image, SITE + "/").href;
+
+    const setMeta = (attr, key, content) => {
+      let el = document.head.querySelector(`meta[${attr}="${key}"]`);
+      if (!el) { el = document.createElement("meta"); el.setAttribute(attr, key); document.head.appendChild(el); }
+      el.setAttribute("content", content);
+    };
+    let canonical = document.head.querySelector('link[rel="canonical"]');
+    if (!canonical) { canonical = document.createElement("link"); canonical.rel = "canonical"; document.head.appendChild(canonical); }
+    canonical.href = url;
+
     document.title = title;
+    setMeta("name", "description", description);
+    setMeta("name", "robots", indexable ? "index, follow" : "noindex, follow");
+    setMeta("property", "og:url", url);
+    setMeta("property", "og:title", title);
+    setMeta("property", "og:description", description);
+    setMeta("property", "og:image", image);
+    setMeta("name", "twitter:title", title);
+    setMeta("name", "twitter:description", description);
+    setMeta("name", "twitter:image", image);
   }
 
   window.scrollTo(0, 0);
@@ -1980,10 +2340,6 @@ function route() {
     a.classList.toggle("active", href !== "/" && path.startsWith(href));
   });
 
-  // wire data-link clicks (smooth, no full reload — hash does that)
-  outlet.querySelectorAll('[data-link]').forEach(a => {
-    a.addEventListener("click", () => { /* hash router handles it */ });
-  });
 
   // ─── Menu tabs ───
   const menuTabBtns = outlet.querySelectorAll('[data-menu-tab]');
@@ -2058,7 +2414,6 @@ function route() {
       }
       const btn = notifyForm.querySelector('#notifyBtn');
       if (btn) { btn.disabled = true; btn.textContent = 'Joining...'; }
-      try { localStorage.setItem('clvch_email', emailVal); } catch {}
       try {
         const res = await fetch('/api/subscribe', {
           method: 'POST',
@@ -2067,7 +2422,11 @@ function route() {
         });
         const data = await res.json().catch(() => ({}));
         if (res.ok && data.success) {
-          try { localStorage.setItem('clvch_notify_seen', 'true'); } catch {}
+          try {
+            localStorage.setItem('clvch_notify_seen', 'true');
+            localStorage.setItem('clvch_email', emailVal);
+            localStorage.setItem('clvch_vip_joined', 'true');
+          } catch {}
           const done = document.createElement('p');
           done.className = 'gdposter-notify-done';
           done.textContent = "You're on the list. We'll be in touch.";
@@ -2131,7 +2490,7 @@ function route() {
     adminSection.querySelectorAll("[data-admin-signout]").forEach(el => {
       el.addEventListener("click", () => {
         setAdminRole("");
-        location.hash = "#/admin";
+        navigate("/admin");
         route();
       });
     });
@@ -2588,13 +2947,13 @@ function route() {
   // ─── Stories admin wiring ───
   if (adminSection && adminSection.hasAttribute('data-stories-admin')) {
     adminSection.querySelector("[data-stories-new]")?.addEventListener("click", () => {
-      location.hash = "#/admin/stories/new";
+      navigate("/admin/stories/new");
     });
 
     // Edit buttons
     adminSection.querySelectorAll("[data-stories-edit]").forEach(btn => {
       btn.addEventListener("click", () => {
-        location.hash = "#/admin/stories/" + btn.dataset.storiesEdit;
+        navigate("/admin/stories/" + btn.dataset.storiesEdit);
       });
     });
 
@@ -2692,7 +3051,7 @@ function route() {
           : existing.map(a => a.id === id ? article : a);
         window.CLVCH.saveArticles();
         setMsg("Saved.", true);
-        setTimeout(() => { location.hash = "#/admin/stories"; }, 600);
+        setTimeout(() => { navigate("/admin/stories"); }, 600);
       });
     }
   }
@@ -2763,21 +3122,49 @@ function route() {
   }
 }
 
-window.addEventListener("hashchange", route);
+/* ═══ History API navigation ═══ */
+function navigate(href) {
+  window.history.pushState({}, "", href);
+  route();
+}
+window.CLVCH.navigate = navigate;
+
+// Internal [data-link] clicks (page content and nav) change the URL without a reload.
+// Modifier clicks (new tab/window) and the scroll-to-section nav links are left alone.
+document.addEventListener("click", (e) => {
+  const a = e.target.closest("a[data-link]");
+  if (!a || e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  if (NAV_ANCHORS[a.id]) return;
+  const href = a.getAttribute("href");
+  if (!href || !href.startsWith("/")) return;
+  e.preventDefault();
+  navigate(href);
+});
+
+// Old hash links (e.g. clvchusa.com/#/menu shared before the switch) → real URL
+function redirectHashLink() {
+  if (!location.hash.startsWith("#/")) return false;
+  window.history.replaceState({}, "", location.hash.slice(1));
+  return true;
+}
+redirectHashLink();
+window.addEventListener("hashchange", () => { if (redirectHashLink()) route(); });
+
+window.addEventListener("popstate", route);
 window.addEventListener("DOMContentLoaded", route);
 
 // Re-render public pages whenever the city list changes (e.g. after admin edits).
 // Skip when we're already on /admin — admin pages re-render themselves on action.
 window.addEventListener("clvch:locations-changed", () => {
-  if (location.hash.startsWith("#/admin")) return;
+  if (location.pathname.startsWith("/admin")) return;
   route();
 });
 window.addEventListener("clvch:home-changed", () => {
-  if (location.hash.startsWith("#/admin")) return;
+  if (location.pathname.startsWith("/admin")) return;
   route();
 });
 window.addEventListener('clvch:sanity-loaded', () => {
-  if (!location.hash.startsWith('#/admin')) route();
+  if (!location.pathname.startsWith('/admin')) route();
 });
 
 // Anchor-style nav links → scroll to a section on home
@@ -2796,8 +3183,8 @@ document.addEventListener("click", (e) => {
     const top = el.getBoundingClientRect().top + window.scrollY - 80;
     window.scrollTo({ top, behavior: "smooth" });
   };
-  if (location.hash !== "" && location.hash !== "#/") {
-    location.hash = "#/";
+  if (location.pathname !== "/") {
+    navigate("/");
     setTimeout(goScroll, 50);
   } else {
     goScroll();

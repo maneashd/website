@@ -61,6 +61,7 @@ export const menuItem = defineType({
       title: 'Location',
       type: 'reference',
       to: [{type: 'location'}],
+      description: 'Leave empty to show this item on every location\'s menu.',
     }),
   ],
 })

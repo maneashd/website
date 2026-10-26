@@ -146,8 +146,8 @@ const HOME_SEED = {
     events:    "info@clvchusa.com",
     press:     "info@clvchusa.com",
     franchise: "info@clvchusa.com",
-    instagram: "clvch.usa",
-    facebook:  "clvchusa",
+    instagram: "clvch_atlanta",
+    facebook:  "clvchatlanta",
   },
 };
 
@@ -493,9 +493,9 @@ window.CLVCH.saveMenu = () => {
   try {
     const [locations, menuItems, stories, homePage, gamedayPosters] = await Promise.all([
       window.CLVCH_SANITY.fetch('*[_type == "location"] | order(city asc)'),
-      window.CLVCH_SANITY.fetch('*[_type == "menuItem"] | order(sortOrder asc)'),
+      window.CLVCH_SANITY.fetch('*[_type == "menuItem"] | order(sortOrder asc){..., "locationId": location->id}'),
       window.CLVCH_SANITY.fetch('*[_type == "story" && published == true] | order(publishedDate desc)'),
-      window.CLVCH_SANITY.fetch('*[_type == "homePage"][0]'),
+      window.CLVCH_SANITY.fetch('*[_type == "homePage"][0]{..., "heroVideoUrl": heroVideo.asset->url}'),
       window.CLVCH_SANITY.fetch('*[_type == "gamedayPoster"]{..., location->}'),
     ]);
 
@@ -510,8 +510,8 @@ window.CLVCH.saveMenu = () => {
           city: doc.city || '',
           state: doc.state || '',
           status: doc.status || 'soon',
-          tonight: seed.tonight || '',
-          tonightTime: seed.tonightTime || '',
+          tonight: doc.tonight || seed.tonight || '',
+          tonightTime: doc.tonightTime || seed.tonightTime || '',
           address: doc.address || '',
           phone: doc.phone || '',
           hours: doc.hours || '',
@@ -524,8 +524,14 @@ window.CLVCH.saveMenu = () => {
           marqueeWords: Array.isArray(doc.marqueeWords) && doc.marqueeWords.length
             ? doc.marqueeWords : (seed.marqueeWords || []),
           disabled: doc.disabled || false,
-          reservations_enabled: doc.reservations_enabled !== false,
-          roomImages: seed.roomImages || { bites: [], beats: [], booze: [] },
+          reservations_enabled: doc.reservationsEnabled !== false,
+          roomImages: ['bites', 'beats', 'booze'].reduce((rooms, room) => {
+            const imgs = ((doc.roomImages && doc.roomImages[room]) || [])
+              .map(img => img && img.asset && window.CLVCH_SANITY.imageUrl(img.asset._ref))
+              .filter(Boolean);
+            rooms[room] = imgs.length ? imgs : ((seed.roomImages && seed.roomImages[room]) || []);
+            return rooms;
+          }, {}),
         };
       });
       changed = true;
@@ -552,21 +558,37 @@ window.CLVCH.saveMenu = () => {
     }
 
     // ── Menu ──
+    // Items linked to a location only show on that city's menu; items with no
+    // location show on every city's menu.
     if (Array.isArray(menuItems) && menuItems.length) {
-      const menu = { coffee: [], brunch: [], kitchen: [], bar: [] };
+      const emptyMenu = () => ({ coffee: [], brunch: [], kitchen: [], bar: [] });
+      const shared = emptyMenu();
+      const byCity = {};
       for (const item of menuItems) {
         if (item.available === false) continue;
         const tab = item.tab || 'kitchen';
-        if (!menu[tab]) continue;
+        if (!shared[tab]) continue;
         const p = item.price;
-        menu[tab].push({
+        const entry = {
           name:  item.name || '',
           desc:  item.description || '',
           price: p == null ? '' : ('$' + (Number.isInteger(p) ? p : Number(p).toFixed(2))),
           tag:   Array.isArray(item.tags) && item.tags.length ? item.tags[0] : '',
-        });
+        };
+        if (item.locationId) (byCity[item.locationId] = byCity[item.locationId] || emptyMenu())[tab].push(entry);
+        else shared[tab].push(entry);
       }
-      window.CLVCH.menu = menu;
+      window.CLVCH.menuByCity = {};
+      for (const l of window.CLVCH.locations) {
+        if (l.disabled) continue;
+        const own = byCity[l.id] || emptyMenu();
+        const menu = emptyMenu();
+        for (const tab in menu) menu[tab] = [...own[tab], ...shared[tab]];
+        // Cities with nothing on their menu yet are left out of the menu page's city switcher
+        if (Object.values(menu).some(items => items.length)) window.CLVCH.menuByCity[l.id] = menu;
+      }
+      const firstCity = Object.keys(window.CLVCH.menuByCity)[0];
+      window.CLVCH.menu = firstCity ? window.CLVCH.menuByCity[firstCity] : shared;
       changed = true;
     }
 
@@ -645,62 +667,73 @@ window.CLVCH.saveMenu = () => {
   }, { passive: true });
 })();
 
-/* ═══ City-gate email modal ═══
-   Triggers once per session per city when a user clicks any link that
-   targets a city (#/locations/<id> or #/reserve?city=<id>).
-   Three paths: OAuth (Google/Apple — wired to placeholder success),
-   email submit, or "skip as guest". Never blocks navigation. */
+/* ═══ VIP list modal (city gate) ═══
+   Pops up once per browser session, a few seconds after landing on any
+   public page. On a location page it is labelled with that city.
+   Never shows again once the visitor has successfully joined. Dismissing
+   it only hides it for the current session. Never blocks navigation. */
 (function cityGate() {
   const gate = document.getElementById("cityGate");
   if (!gate) return;
-  const form = document.getElementById("cityGateForm");
-  const emailInput = document.getElementById("cityGateEmail");
-  const cityLabel = document.getElementById("cityGateCity");
   const card = gate.querySelector(".citygate-card");
+  const ORIGINAL = card.innerHTML;
 
-  const SEEN_KEY = "clvch_gate_seen";
-  const getSeen = () => { try { return JSON.parse(localStorage.getItem(SEEN_KEY) || "[]"); } catch { return []; } };
-  const markSeen = (id) => {
-    const seen = getSeen();
-    if (!seen.includes(id)) { seen.push(id); localStorage.setItem(SEEN_KEY, JSON.stringify(seen)); }
+  const DELAY_MS = 6000;
+  const JOINED_KEY = "clvch_vip_joined";      // localStorage: set only after a successful signup
+  const DISMISSED_KEY = "clvch_vip_dismissed"; // sessionStorage: closed/skipped this session
+
+  const hasJoined = () => { try { return localStorage.getItem(JOINED_KEY) === "true"; } catch { return false; } };
+  const markJoined = (email) => {
+    try { localStorage.setItem(JOINED_KEY, "true"); localStorage.setItem("clvch_email", email); } catch {}
   };
-  const markEmail = (email) => {
-    try { localStorage.setItem("clvch_email", email); } catch {}
-  };
+  const wasDismissed = () => { try { return sessionStorage.getItem(DISMISSED_KEY) === "true"; } catch { return false; } };
+  const markDismissed = () => { try { sessionStorage.setItem(DISMISSED_KEY, "true"); } catch {} };
+
+  const isOpen = () => gate.classList.contains("open");
 
   const open = (cityId) => {
-    const city = window.CLVCH.locations.find(l => l.id === cityId);
-    cityLabel.textContent = city ? `CLVCH · ${city.city}` : "CLVCH · Step inside";
-    card.innerHTML = card.dataset.original || card.innerHTML;
-    if (!card.dataset.original) card.dataset.original = card.innerHTML;
-    rebind();
+    if (hasJoined() || wasDismissed() || isOpen()) return;
+    const city = cityId ? window.CLVCH.locations.find(l => l.id === cityId) : null;
+    card.innerHTML = ORIGINAL;
+    const label = card.querySelector("#cityGateCity");
+    if (label) label.textContent = city ? `CLVCH · ${city.city}` : "CLVCH · VIP List";
+    bind(city);
     gate.classList.add("open");
     gate.setAttribute("aria-hidden", "false");
   };
 
-  const dismiss = () => {
+  const close = () => {
     gate.classList.remove("open");
     gate.setAttribute("aria-hidden", "true");
   };
+  const dismiss = () => { markDismissed(); close(); };
 
-  const proceed = (cityId) => {
-    markSeen(cityId);
-    dismiss();
-  };
-
-  let _scheduleTimer = null;
+  // A route change keeps an already-running countdown (so the Sanity
+  // re-render after load doesn't restart it), but re-targets the city.
+  let _timer = null;
+  let _pendingCity = null;
   const scheduleFor = (cityId) => {
-    if (_scheduleTimer) clearTimeout(_scheduleTimer);
-    if (getSeen().includes(cityId)) return;
-    if (localStorage.getItem("clvch_email")) { markSeen(cityId); return; }
-    _scheduleTimer = setTimeout(() => open(cityId), 20000);
+    _pendingCity = cityId || null;
+    if (_timer || hasJoined() || wasDismissed()) return;
+    _timer = setTimeout(() => { _timer = null; open(_pendingCity); }, DELAY_MS);
   };
   const cancelSchedule = () => {
-    if (_scheduleTimer) { clearTimeout(_scheduleTimer); _scheduleTimer = null; }
+    if (_timer) { clearTimeout(_timer); _timer = null; }
   };
-  window.CLVCH.cityGate = { scheduleFor, cancelSchedule };
+  window.CLVCH.cityGate = { scheduleFor, cancelSchedule, open };
 
-  const showSuccess = (msg, cityId) => {
+  const showError = (form, msg) => {
+    let errEl = form.querySelector(".cg-error");
+    if (!errEl) {
+      errEl = document.createElement("p");
+      errEl.className = "cg-error";
+      errEl.style.cssText = "color:#ff8b7e;font-family:var(--mono);font-size:10px;letter-spacing:0.12em;margin-top:8px;";
+      form.appendChild(errEl);
+    }
+    errEl.textContent = msg;
+  };
+
+  const showSuccess = (msg) => {
     card.innerHTML = `
       <button class="citygate-close" id="cityGateClose2" aria-label="Close">✕</button>
       <div class="citygate-eyebrow">You're on the list</div>
@@ -708,102 +741,65 @@ window.CLVCH.saveMenu = () => {
       <div class="citygate-success">${msg}</div>
       <button class="citygate-skip" id="cityGateContinue">Step inside →</button>
     `;
-    document.getElementById("cityGateClose2").addEventListener("click", () => proceed(cityId));
-    document.getElementById("cityGateContinue").addEventListener("click", () => proceed(cityId));
+    card.querySelector("#cityGateClose2").addEventListener("click", close);
+    card.querySelector("#cityGateContinue").addEventListener("click", close);
   };
 
-  function rebind() {
-    const close2 = card.querySelector(".citygate-close");
-    const skip2 = card.querySelector(".citygate-skip");
-    const form2 = card.querySelector("#cityGateForm");
-    const input2 = card.querySelector("#cityGateEmail");
+  function bind(city) {
+    const cityId = city ? city.id : "";
+    card.querySelector(".citygate-close")?.addEventListener("click", dismiss);
+    card.querySelector(".citygate-skip")?.addEventListener("click", dismiss);
+    const form = card.querySelector("#cityGateForm");
+    if (!form) return;
 
-    const currentCity = (cityLabel.textContent || "").split("·")[1]?.trim().toLowerCase() || "";
-    const cityObj = window.CLVCH.locations.find(l => l.city.toLowerCase() === currentCity);
-    const cityId = cityObj ? cityObj.id : null;
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = card.querySelector("#cityGateEmail")?.value.trim() || "";
+      const rawPhone = card.querySelector("#cityGatePhone")?.value.trim() || "";
 
-    if (close2) close2.addEventListener("click", () => { if (cityId) markSeen(cityId); dismiss(); });
-    if (skip2) skip2.addEventListener("click", () => { if (cityId) proceed(cityId); else dismiss(); });
-    if (form2) {
-      form2.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const val = input2?.value.trim();
-        const rawPhone = card.querySelector("#cityGatePhone")?.value.trim() || "";
-        let phone2;
-        if (rawPhone) {
-          const hasPlus = rawPhone.startsWith("+");
-          const digits = rawPhone.replace(/\D/g, "");
-          phone2 = (hasPlus ? "+" : "+1") + digits;
-          if (!/^\+\d{10,15}$/.test(phone2)) {
-            let errEl = form2.querySelector(".cg-error");
-            if (!errEl) {
-              errEl = document.createElement("p");
-              errEl.className = "cg-error";
-              errEl.style.cssText = "color:#ff8b7e;font-family:var(--mono);font-size:10px;letter-spacing:0.12em;margin-top:8px;";
-              form2.appendChild(errEl);
-            }
-            errEl.textContent = "Enter a valid phone number.";
-            return;
-          }
-        }
-
-        if (!val || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
-          let errEl = form2.querySelector(".cg-error");
-          if (!errEl) {
-            errEl = document.createElement("p");
-            errEl.className = "cg-error";
-            errEl.style.cssText = "color:#ff8b7e;font-family:var(--mono);font-size:10px;letter-spacing:0.12em;margin-top:8px;";
-            form2.appendChild(errEl);
-          }
-          errEl.textContent = "Enter a valid email.";
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showError(form, "Enter a valid email.");
+        return;
+      }
+      let phone;
+      if (rawPhone) {
+        const hasPlus = rawPhone.startsWith("+");
+        const digits = rawPhone.replace(/\D/g, "");
+        phone = (hasPlus ? "+" : "+1") + digits;
+        if (!/^\+\d{10,15}$/.test(phone)) {
+          showError(form, "Enter a valid phone number.");
           return;
         }
+      }
 
-        markEmail(val);
+      const submitBtn = form.querySelector("[type=submit]");
+      const originalBtnText = submitBtn ? submitBtn.textContent : "Join";
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Joining..."; }
+      const fail = (msg) => {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = originalBtnText; }
+        showError(form, msg);
+      };
 
-        const submitBtn = form2.querySelector("[type=submit]");
-        const originalBtnText = submitBtn ? submitBtn.textContent : "Join";
-        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = "Joining..."; }
-
-        try {
-          const res = await fetch("/api/subscribe", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email: val, phone: phone2, city: cityId || "", source: "city-gate-modal" }),
-          });
-          const data = await res.json().catch(() => ({}));
-
-          if (res.ok && data.success) {
-            showSuccess(`We'll write when the list drops in ${cityObj ? cityObj.city : "your city"}.`, cityId);
-          } else {
-            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = originalBtnText; }
-            if (input2) input2.value = val;
-            let errEl = form2.querySelector(".cg-error");
-            if (!errEl) {
-              errEl = document.createElement("p");
-              errEl.className = "cg-error";
-              errEl.style.cssText = "color:#ff8b7e;font-family:var(--mono);font-size:10px;letter-spacing:0.12em;margin-top:8px;";
-              form2.appendChild(errEl);
-            }
-            errEl.textContent = data.message || "Couldn't add you. Try again?";
-          }
-        } catch {
-          if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = originalBtnText; }
-          if (input2) input2.value = val;
-          let errEl = form2.querySelector(".cg-error");
-          if (!errEl) {
-            errEl = document.createElement("p");
-            errEl.className = "cg-error";
-            errEl.style.cssText = "color:#ff8b7e;font-family:var(--mono);font-size:10px;letter-spacing:0.12em;margin-top:8px;";
-            form2.appendChild(errEl);
-          }
-          errEl.textContent = "Couldn't add you. Try again?";
+      try {
+        const res = await fetch("/api/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, phone, city: cityId, source: "city-gate-modal" }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.success) {
+          markJoined(email);
+          showSuccess(`We'll write when the list drops in ${city ? city.city : "your city"}.`);
+        } else {
+          fail(data.message || "Couldn't add you. Try again?");
         }
-      });
-    }
+      } catch {
+        fail("Couldn't add you. Try again?");
+      }
+    });
   }
 
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && gate.classList.contains("open")) dismiss(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && isOpen()) dismiss(); });
 })();
 
 /* ═══ Nav ticker — populated from window.CLVCH.locations so it grows as cities are added ═══ */
@@ -860,8 +856,8 @@ window.CLVCH.saveMenu = () => {
 (function navSocials() {
   function update() {
     const contact = (window.CLVCH && window.CLVCH.home && window.CLVCH.home.contact) || {};
-    const ig = contact.instagram || "clvch.usa";
-    const fb = contact.facebook  || "clvchusa";
+    const ig = contact.instagram || "clvch_atlanta";
+    const fb = contact.facebook  || "clvchatlanta";
     document.querySelectorAll(".nav-social--ig").forEach(el => { el.href = "https://instagram.com/" + ig; });
     document.querySelectorAll(".nav-social--fb").forEach(el => { el.href = "https://facebook.com/" + fb; });
   }
