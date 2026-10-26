@@ -1033,7 +1033,7 @@ img, video { display: block; max-width: 100%; }
 }
 .pillar h3 {
   font-family: var(--display);
-  font-size: 44px;
+  font-size: clamp(56px, 5vw, 76px);
   letter-spacing: 0.02em;
   line-height: 0.9;
 }
@@ -1044,7 +1044,7 @@ img, video { display: block; max-width: 100%; }
   color: var(--bone-dim);
   line-height: 1.45;
   font-weight: 300;
-  margin-top: auto;
+  margin-top: 0;
 }
 .pillar-list {
   font-family: var(--mono);
