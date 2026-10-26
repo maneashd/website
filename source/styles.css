@@ -3621,3 +3621,9 @@ footer {
   border-top: 1px solid var(--line-soft);
   padding-top: 32px;
 }
+
+/* TEMP: four-cities banner — remove by reverting its commit */
+.expansion-banner { max-width: 1440px; margin: 0 auto; padding: 64px 40px; border-top: 1px solid var(--line-soft); }
+.expansion-banner img { display: block; width: 100%; height: auto; border: 1px solid var(--line-soft); }
+@media (max-width: 720px) { .expansion-banner { padding: 40px 16px; } }
+/* /TEMP */

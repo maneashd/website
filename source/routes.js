@@ -285,6 +285,15 @@ function renderHome() {
   </div>
 </section>
 
+<!-- TEMP: four-cities banner — remove by reverting its commit -->
+<section class="expansion-banner" aria-label="CLVCH is expanding to four cities">
+  <picture>
+    <source media="(max-width: 720px)" srcset="/assets/four-cities-mobile.jpg" width="1080" height="1440">
+    <img src="/assets/four-cities.jpg" alt="CLVCH expanding to Johns Creek (Atlanta), Houston, Austin and Las Vegas by Q1 2027." loading="lazy" width="1920" height="1080">
+  </picture>
+</section>
+<!-- /TEMP -->
+
 <!-- MARQUEE -->
 <div class="marquee">
   <div class="marquee-track">
