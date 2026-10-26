@@ -15,4 +15,12 @@ export default defineConfig({
   schema: {
     types: schemaTypes,
   },
+
+  // "Open preview" in a location's document menu goes to its live page
+  document: {
+    productionUrl: async (prev, {document}) =>
+      document._type === 'location' && typeof document.id === 'string' && document.id
+        ? `https://www.clvchusa.com/locations/${document.id}`
+        : prev,
+  },
 })

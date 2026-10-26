@@ -408,7 +408,7 @@ ${renderGameday(l.id)}
         <div class="pillar-num">01 / Kitchen</div>
         <h3>Bites<em> ·</em></h3>
         <p>Chef-driven modern American. Menu rotates seasonally; the wood-fire never stops.</p>
-        <div class="pillar-list"><b>View</b> &nbsp;·&nbsp; <a href="/menu" data-link style="color:var(--gold);">Full menu →</a></div>
+        <div class="pillar-list"><b>View</b> &nbsp;·&nbsp; <a href="/menu?city=${encodeURIComponent(l.id)}" data-link style="color:var(--gold);">Full menu →</a></div>
       </div>
     </div>
     <div class="pillar pillar--img-right">
@@ -900,7 +900,12 @@ function renderMenuItems(items) {
 }
 
 function renderMenu() {
-  const M = window.CLVCH.menu;
+  // Per-city menus come from Sanity (window.CLVCH.menuByCity); /menu?city=<id> picks one.
+  const byCity = window.CLVCH.menuByCity || {};
+  const menuCities = publicLocations().filter(l => byCity[l.id]);
+  const wanted = new URLSearchParams(location.search).get("city");
+  const city = menuCities.find(l => l.id === wanted) || menuCities[0] || null;
+  const M = city ? byCity[city.id] : window.CLVCH.menu;
   const menuPdf = window.CLVCH.home.menuPdf || "";
   return `
 <section class="menu-page">
@@ -919,6 +924,11 @@ function renderMenu() {
     </a>` : ''}
   </div>
 
+  ${menuCities.length > 1 ? `
+  <div class="menu-tab-row menu-city-row">
+    ${menuCities.map(l => `<a href="/menu?city=${encodeURIComponent(l.id)}" data-link class="menu-tab-btn${l === city ? ' on' : ''}">${h(l.city)}</a>`).join('')}
+  </div>` : ''}
+
   <div class="menu-tab-row">
     <button class="menu-tab-btn on" data-menu-tab="coffee">Coffee</button>
     <button class="menu-tab-btn" data-menu-tab="brunch">Brunch</button>
@@ -927,9 +937,9 @@ function renderMenu() {
   </div>
 
   <div data-menu-panel="coffee" class="menu-panel">
-    ${(window.CLVCH.menu.coffee && window.CLVCH.menu.coffee.length) ? `
+    ${(M.coffee && M.coffee.length) ? `
       <div class="menu-panel-sub">Specialty coffee · All day</div>
-      <div class="menu-items">${renderMenuItems(window.CLVCH.menu.coffee)}</div>
+      <div class="menu-items">${renderMenuItems(M.coffee)}</div>
     ` : `
       <div class="menu-coming-soon">
         <div class="menu-coming-soon-inner">

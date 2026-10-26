@@ -3431,6 +3431,8 @@ footer {
 }
 .menu-tab-btn:hover { color: var(--bone); }
 .menu-tab-btn.on { color: var(--bone); border-bottom-color: var(--bone); }
+.menu-city-row { margin-bottom: 0; }
+.menu-city-row .menu-tab-btn { display: inline-block; text-decoration: none; }
 .menu-panel-sub {
   font-family: var(--mono);
   font-size: 10px;

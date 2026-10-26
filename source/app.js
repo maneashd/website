@@ -493,9 +493,9 @@ window.CLVCH.saveMenu = () => {
   try {
     const [locations, menuItems, stories, homePage, gamedayPosters] = await Promise.all([
       window.CLVCH_SANITY.fetch('*[_type == "location"] | order(city asc)'),
-      window.CLVCH_SANITY.fetch('*[_type == "menuItem"] | order(sortOrder asc)'),
+      window.CLVCH_SANITY.fetch('*[_type == "menuItem"] | order(sortOrder asc){..., "locationId": location->id}'),
       window.CLVCH_SANITY.fetch('*[_type == "story" && published == true] | order(publishedDate desc)'),
-      window.CLVCH_SANITY.fetch('*[_type == "homePage"][0]'),
+      window.CLVCH_SANITY.fetch('*[_type == "homePage"][0]{..., "heroVideoUrl": heroVideo.asset->url}'),
       window.CLVCH_SANITY.fetch('*[_type == "gamedayPoster"]{..., location->}'),
     ]);
 
@@ -510,8 +510,8 @@ window.CLVCH.saveMenu = () => {
           city: doc.city || '',
           state: doc.state || '',
           status: doc.status || 'soon',
-          tonight: seed.tonight || '',
-          tonightTime: seed.tonightTime || '',
+          tonight: doc.tonight || seed.tonight || '',
+          tonightTime: doc.tonightTime || seed.tonightTime || '',
           address: doc.address || '',
           phone: doc.phone || '',
           hours: doc.hours || '',
@@ -524,8 +524,14 @@ window.CLVCH.saveMenu = () => {
           marqueeWords: Array.isArray(doc.marqueeWords) && doc.marqueeWords.length
             ? doc.marqueeWords : (seed.marqueeWords || []),
           disabled: doc.disabled || false,
-          reservations_enabled: doc.reservations_enabled !== false,
-          roomImages: seed.roomImages || { bites: [], beats: [], booze: [] },
+          reservations_enabled: doc.reservationsEnabled !== false,
+          roomImages: ['bites', 'beats', 'booze'].reduce((rooms, room) => {
+            const imgs = ((doc.roomImages && doc.roomImages[room]) || [])
+              .map(img => img && img.asset && window.CLVCH_SANITY.imageUrl(img.asset._ref))
+              .filter(Boolean);
+            rooms[room] = imgs.length ? imgs : ((seed.roomImages && seed.roomImages[room]) || []);
+            return rooms;
+          }, {}),
         };
       });
       changed = true;
@@ -552,21 +558,37 @@ window.CLVCH.saveMenu = () => {
     }
 
     // ── Menu ──
+    // Items linked to a location only show on that city's menu; items with no
+    // location show on every city's menu.
     if (Array.isArray(menuItems) && menuItems.length) {
-      const menu = { coffee: [], brunch: [], kitchen: [], bar: [] };
+      const emptyMenu = () => ({ coffee: [], brunch: [], kitchen: [], bar: [] });
+      const shared = emptyMenu();
+      const byCity = {};
       for (const item of menuItems) {
         if (item.available === false) continue;
         const tab = item.tab || 'kitchen';
-        if (!menu[tab]) continue;
+        if (!shared[tab]) continue;
         const p = item.price;
-        menu[tab].push({
+        const entry = {
           name:  item.name || '',
           desc:  item.description || '',
           price: p == null ? '' : ('$' + (Number.isInteger(p) ? p : Number(p).toFixed(2))),
           tag:   Array.isArray(item.tags) && item.tags.length ? item.tags[0] : '',
-        });
+        };
+        if (item.locationId) (byCity[item.locationId] = byCity[item.locationId] || emptyMenu())[tab].push(entry);
+        else shared[tab].push(entry);
       }
-      window.CLVCH.menu = menu;
+      window.CLVCH.menuByCity = {};
+      for (const l of window.CLVCH.locations) {
+        if (l.disabled) continue;
+        const own = byCity[l.id] || emptyMenu();
+        const menu = emptyMenu();
+        for (const tab in menu) menu[tab] = [...own[tab], ...shared[tab]];
+        // Cities with nothing on their menu yet are left out of the menu page's city switcher
+        if (Object.values(menu).some(items => items.length)) window.CLVCH.menuByCity[l.id] = menu;
+      }
+      const firstCity = Object.keys(window.CLVCH.menuByCity)[0];
+      window.CLVCH.menu = firstCity ? window.CLVCH.menuByCity[firstCity] : shared;
       changed = true;
     }
 
